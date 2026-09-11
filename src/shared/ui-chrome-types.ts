@@ -119,4 +119,5 @@ export type TopLevelView =
   | 'space'
   | 'skills'
   | 'artifacts'
+  | 'maestro'
   | 'mobile'

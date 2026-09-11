@@ -112,6 +112,7 @@ export type UiViewHistory =
   | 'space'
   | 'skills'
   | 'artifacts'
+  | 'maestro'
   | 'mobile'
 
 export type UISliceCore = {
@@ -148,6 +149,7 @@ export type UISliceCore = {
   previousViewBeforeSkills: Exclude<UiViewHistory, 'skills'>
   previousViewBeforeMobile: Exclude<UiViewHistory, 'mobile'>
   previousViewBeforeArtifacts: Exclude<UiViewHistory, 'artifacts'>
+  previousViewBeforeMaestro: Exclude<UiViewHistory, 'maestro'>
   setActiveView: (view: UISliceCore['activeView']) => void
   taskPageData: TaskPageData
   taskResumeState: TaskResumeState | undefined
@@ -189,6 +191,8 @@ export type UISliceCore = {
   clearPendingSkillsSharedView: () => void
   openArtifactsPage: () => void
   closeArtifactsPage: () => void
+  openMaestroPage: () => void
+  closeMaestroPage: () => void
   openMobilePage: () => void
   closeMobilePage: () => void
   setNewWorkspaceDraft: (draft: NonNullable<UISliceCore['newWorkspaceDraft']>) => void

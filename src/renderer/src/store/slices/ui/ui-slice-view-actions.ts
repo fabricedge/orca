@@ -92,6 +92,19 @@ export function createUiViewActions(set: UISliceSet, get: UISliceGet): Partial<U
         activeView: state.previousViewBeforeArtifacts,
         worktreeNavHistoryIndex: rewindHistoryIndexPastView(state, 'artifacts')
       })),
+    openMaestroPage: () => {
+      get().recordViewVisit('maestro')
+      set((state) => ({
+        activeView: 'maestro',
+        previousViewBeforeMaestro:
+          state.activeView === 'maestro' ? state.previousViewBeforeMaestro : state.activeView
+      }))
+    },
+    closeMaestroPage: () =>
+      set((state) => ({
+        activeView: state.previousViewBeforeMaestro,
+        worktreeNavHistoryIndex: rewindHistoryIndexPastView(state, 'maestro')
+      })),
     openMobilePage: () =>
       set((state) => ({
         activeView: 'mobile',

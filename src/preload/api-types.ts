@@ -34,6 +34,7 @@ import type { GitLabApi } from './api/gitlab-api'
 import type { BitbucketApi, HostedReviewApi } from './api/hosted-review-api'
 import type { JiraApi } from './api/jira-api'
 import type { LinearApi } from './api/linear-api'
+import type { MaestroApi } from './api/maestro-api'
 import type { MobileApi } from './api/mobile-api'
 import type { NativeChatApi } from './api/native-chat-api'
 import type { OnboardingApi, StarNagApi } from './api/onboarding-api'
@@ -143,6 +144,7 @@ export type PreloadApi = {
   grokAccounts: GrokAccountsApi
   ssh: SshApi
   automations: AutomationsApi
+  maestro: MaestroApi
   wsl: RuntimeApi['wsl']
   pwsh: RuntimeApi['pwsh']
   gitBash: RuntimeApi['gitBash']
@@ -155,6 +157,7 @@ export type PreloadApi = {
 export type { ClaudeUsageApi, CodexUsageApi, OpenCodeUsageApi } from './api/agent-usage-api'
 export type { AiVaultApi } from './api/ai-vault-api'
 export type { AutomationsApi, ExternalAutomationManagerResult } from './api/automation-api'
+export type { MaestroApi } from './api/maestro-api'
 export type { AppApi } from './api/app-api'
 export type { BrowserApi, DetectedBrowserInfo, DetectedBrowserProfileInfo } from './api/browser-api'
 export type { EmulatorApi } from './api/emulator-api'
