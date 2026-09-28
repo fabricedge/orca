@@ -26,6 +26,7 @@ describe('orca-dev package bin', () => {
         '  argv: process.argv.slice(2),',
         '  userDataPath: process.env.ORCA_USER_DATA_PATH,',
         '  devCliInvocation: process.env.ORCA_DEV_CLI_INVOCATION,',
+        '  appRoot: process.env.ORCA_APP_ROOT,',
         '  appExecutable: process.env.ORCA_APP_EXECUTABLE',
         '}));'
       ].join('\n'),
@@ -40,6 +41,7 @@ describe('orca-dev package bin', () => {
         ...process.env,
         ORCA_DEV_CLI_ENTRY_PATH: cliEntry,
         ORCA_DEV_USER_DATA_PATH: path.join(root, 'user-data'),
+        ORCA_APP_ROOT: root,
         ORCA_APP_EXECUTABLE: path.join(root, 'Electron')
       },
       stdio: 'ignore'
@@ -49,6 +51,7 @@ describe('orca-dev package bin', () => {
       argv: ['--help'],
       userDataPath: path.join(root, 'user-data'),
       devCliInvocation: '1',
+      appRoot: projectDir,
       appExecutable: path.join(root, 'Electron')
     })
   })

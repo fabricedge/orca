@@ -34,6 +34,7 @@ export const CLI_COMMAND_NAMES = [
   'geolocation',
   'get',
   'goto',
+  'headless',
   'highlight',
   'host',
   'hover',

@@ -18,6 +18,17 @@ export const HANDLER_GROUPS: readonly HandlerGroup[] = [
     load: async () => (await import('./handlers/core.js')).CORE_HANDLERS
   },
   {
+    name: 'headless',
+    keys: [
+      'headless install',
+      'headless status',
+      'headless start',
+      'headless stop',
+      'headless remove'
+    ],
+    load: async () => (await import('./handlers/headless.js')).HEADLESS_HANDLERS
+  },
+  {
     name: 'account',
     keys: ['account add', 'account list'],
     load: async () => (await import('./handlers/account.js')).ACCOUNT_HANDLERS

@@ -2,6 +2,7 @@ import { existsSync, statSync } from 'node:fs'
 import { isAbsolute, join } from 'node:path'
 import { app } from 'electron'
 import { resolveAdvertisedPairingEndpoint } from '../runtime/pairing-endpoint'
+import { getDefaultPairingAddress } from '../runtime/pairing-network-interfaces'
 import { notifyServeSupervisorReady } from '../serve-update-handoff'
 import { mainProcessState as state } from './main-process-state'
 import { getServeOptions, type ServeOptions } from './serve-options'
@@ -51,8 +52,10 @@ export async function printServeReady(options: ServeOptions): Promise<void> {
     }
   }
   const boundEndpoint = runtimeRpc.getWebSocketEndpoint()
+  const pairingAddress =
+    options.pairingAddress === 'auto' ? await getDefaultPairingAddress() : options.pairingAddress
   const advertised = boundEndpoint
-    ? resolveAdvertisedPairingEndpoint(boundEndpoint, options.pairingAddress)
+    ? resolveAdvertisedPairingEndpoint(boundEndpoint, pairingAddress)
     : null
   const pairing = options.noPairing
     ? ({
@@ -61,7 +64,7 @@ export async function printServeReady(options: ServeOptions): Promise<void> {
         guidance: 'Restart without --no-pairing to create a client pairing offer.'
       } as const)
     : runtimeRpc.createPairingOffer({
-        address: options.pairingAddress,
+        address: pairingAddress,
         name: `${options.mobilePairing ? 'Mobile' : 'CLI'} ${new Date().toLocaleDateString()}`,
         scope: options.mobilePairing ? 'mobile' : 'runtime'
       })

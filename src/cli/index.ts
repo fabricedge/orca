@@ -111,6 +111,19 @@ export async function main(
     // lookup so users do not get misleading "Orca is not running" failures for
     // simple command typos or unsupported flags.
     validateCommandAndFlags(COMMAND_SPECS, parsed)
+    // Why: service management is local and must work before the GUI/runtime is
+    // running; it also avoids loading the much larger runtime client graph.
+    if (parsed.commandPath[0] === 'headless') {
+      await dispatch(parsed.commandPath, {
+        flags: parsed.flags,
+        get client(): RuntimeClient {
+          throw new Error('The headless service CLI does not connect to the runtime.')
+        },
+        cwd,
+        json
+      })
+      return
+    }
     const RuntimeClientClass = await loadRuntimeClientClass()
     const ignoreRemoteSelection = shouldIgnoreRemoteSelection(parsed.commandPath)
     const pairingCode = ignoreRemoteSelection ? null : parsed.flags.get('pairing-code')
