@@ -1,4 +1,5 @@
 import { OrcaRuntimeWithGetRuntimeId } from './orca-runtime-get-runtime-id'
+import os from 'node:os'
 import type { RuntimeDegradation, RuntimeStatus } from '../../shared/runtime-types'
 import {
   runtimeBrowserCommandsFactoryIsHeadless,
@@ -134,6 +135,11 @@ export class OrcaRuntimeWithGetStatus extends OrcaRuntimeWithGetRuntimeId {
     }
     return {
       runtimeId: this.runtimeId,
+      runtimeMode: this.runtimeMode,
+      hostName: os.hostname(),
+      ...(this.runtimeProfile
+        ? { profileId: this.runtimeProfile.id, profileName: this.runtimeProfile.name }
+        : {}),
       rendererGraphEpoch: this.rendererGraphEpoch,
       graphStatus: this.graphStatus,
       authoritativeWindowId: this.authoritativeWindowId,

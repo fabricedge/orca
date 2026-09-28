@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '../ui/button'
 import { RuntimePairingUrlGenerator } from './RuntimePairingUrlGenerator'
 import { MachineNameField } from './MachineNameField'
+import { LinuxHeadlessServiceSection } from './LinuxHeadlessServiceSection'
 
 export type RemoteServerWorkflow = 'connect' | 'cloud-vm' | 'share'
 
@@ -165,6 +166,7 @@ export function RuntimeServerShareSection({
           />
         </div>
       </div>
+      <LinuxHeadlessServiceSection />
     </div>
   )
 }

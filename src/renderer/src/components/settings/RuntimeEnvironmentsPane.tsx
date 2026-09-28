@@ -47,6 +47,7 @@ type RuntimeEnvironmentsPaneProps = {
   canGeneratePairingUrl?: boolean
   allowLocalRuntime?: boolean
   addServerIntentSignal?: number
+  headlessServiceIntentSignal?: number
 }
 
 export function RuntimeEnvironmentsPane({
@@ -54,7 +55,8 @@ export function RuntimeEnvironmentsPane({
   setActiveRuntimeEnvironmentPreference,
   canGeneratePairingUrl = true,
   allowLocalRuntime = true,
-  addServerIntentSignal
+  addServerIntentSignal,
+  headlessServiceIntentSignal
 }: RuntimeEnvironmentsPaneProps): React.JSX.Element {
   const [pendingSwitchValue, setPendingSwitchValue] = useState<string | null>(null)
   const [pendingRemove, setPendingRemove] = useState<PublicKnownRuntimeEnvironment | null>(null)
@@ -62,6 +64,7 @@ export function RuntimeEnvironmentsPane({
   const [shareServerFormOpen, setShareServerFormOpen] = useState(true)
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [workflow, setWorkflow] = useState<RemoteServerWorkflow>('connect')
+  const consumedHeadlessServiceIntentRef = useRef(0)
   const remoteServerUpdates = useAppStore((state) => state.remoteServerUpdates)
   const remoteServerUpdatesChecking = useAppStore((state) => state.remoteServerUpdatesChecking)
   const remoteServerUpdatesRunning = useAppStore((state) => state.remoteServerUpdatesRunning)
@@ -160,7 +163,22 @@ export function RuntimeEnvironmentsPane({
   const searchEntry = canGeneratePairingUrl
     ? getRuntimeEnvironmentsSearchEntry()
     : getWebRuntimeEnvironmentsSearchEntry()
-  const visibleWorkflow: RemoteServerWorkflow = addServerFormOpen ? 'connect' : workflow
+  const openHeadlessService =
+    Boolean(headlessServiceIntentSignal) &&
+    consumedHeadlessServiceIntentRef.current !== headlessServiceIntentSignal
+  const visibleWorkflow: RemoteServerWorkflow = openHeadlessService
+    ? 'share'
+    : addServerFormOpen
+      ? 'connect'
+      : workflow
+
+  useEffect(() => {
+    if (openHeadlessService) {
+      consumedHeadlessServiceIntentRef.current = headlessServiceIntentSignal ?? 0
+      setAddServerFormOpen(false)
+      setWorkflow('share')
+    }
+  }, [openHeadlessService, headlessServiceIntentSignal])
 
   const openRemoveDialog = (environment: PublicKnownRuntimeEnvironment): void => {
     setRemoveError(null)

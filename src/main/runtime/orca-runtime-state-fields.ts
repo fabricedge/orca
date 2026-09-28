@@ -43,6 +43,8 @@ import { registerTerminalViewAttributesApplier } from './terminal-view-attribute
 import { RuntimeMachineName } from './runtime-machine-name'
 
 export class OrcaRuntimeWithStateFields extends OrcaRuntimeWithLinearCommands {
+  protected readonly runtimeProfile: { id: string; name: string } | null
+  protected readonly runtimeMode: 'desktop' | 'headless'
   protected readonly prepareClaudeAuth?: PrepareClaudeAuth
 
   protected readonly machineName = new RuntimeMachineName(
@@ -53,6 +55,8 @@ export class OrcaRuntimeWithStateFields extends OrcaRuntimeWithLinearCommands {
     store: RuntimeStore | null = null,
     stats?: StatsCollector,
     deps?: {
+      runtimeProfile?: { id: string; name: string }
+      runtimeMode?: 'desktop' | 'headless'
       getLocalProvider?: () => IPtyProvider
       getSshProvider?: (connectionId: string) => IPtyProvider | undefined
       prepareClaudeAuth?: PrepareClaudeAuth
@@ -120,6 +124,8 @@ export class OrcaRuntimeWithStateFields extends OrcaRuntimeWithLinearCommands {
     super()
     this.store = store
     this.machineName.start()
+    this.runtimeProfile = deps?.runtimeProfile ?? null
+    this.runtimeMode = deps?.runtimeMode ?? 'desktop'
     this.prepareClaudeAuth = deps?.prepareClaudeAuth
     store?.onSettingsChanged?.((updates) => {
       if ('experimentalStructuredNativeChat' in updates) {

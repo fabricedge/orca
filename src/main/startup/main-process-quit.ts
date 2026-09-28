@@ -30,6 +30,8 @@ import { shouldQuitWhenAllWindowsClosed } from './window-all-closed-quit-policy'
 import { mainProcessState as state } from './main-process-state'
 import { isDevParentShutdownRequested } from './configure-process'
 import { getCanonicalUserDataPath } from '../persistence'
+import { startEnabledLinuxHeadlessServiceAfterDesktopQuit } from '../linux-headless-service'
+import { isAppRelaunchPending } from '../app-relaunch'
 
 // Why: will-quit fires twice — first pass preventDefaults and runs teardown; second pass exits.
 let daemonDisconnectDone = false
@@ -113,6 +115,12 @@ function installWillQuitHandler(): void {
     // Why: renderer guards can still cancel before this committed phase; `log stream` must survive those vetoes.
     stopTccPromptNotice()
     const updateQuitInProgress = isQuittingForUpdate()
+    const headlessHandoff =
+      !updateQuitInProgress && !isAppRelaunchPending()
+        ? startEnabledLinuxHeadlessServiceAfterDesktopQuit().catch((error) => {
+            console.warn('[headless-service] Could not schedule startup after desktop quit:', error)
+          })
+        : Promise.resolve()
     if (updateQuitInProgress) {
       recordUpdaterLifecycle(
         'will_quit_cleanup_started',
@@ -249,6 +257,7 @@ function installWillQuitHandler(): void {
     // Losing at most the last debounce interval beats a quit that never completes, and the
     // temp+rename swap means a write cut short by the deadline leaves the old file intact.
     settleTeardownWithinDeadline([
+      { name: 'headless-service-handoff', promise: headlessHandoff },
       { name: 'daemon', promise: daemonTeardown },
       { name: 'browser', promise: browserShutdown },
       { name: 'runtime-rpc', promise: rpcStopAndClear },

@@ -10,7 +10,14 @@ export type AppRelaunchReason =
   | 'profile-transfer'
   | 'renderer-request'
 
+let appRelaunchPending = false
+
+export function isAppRelaunchPending(): boolean {
+  return appRelaunchPending
+}
+
 export function relaunchApp(reason: AppRelaunchReason, data?: CrashReportBreadcrumbData): void {
+  appRelaunchPending = true
   // Why: the current process can exit immediately after app.relaunch(), so
   // persist the cause before Electron schedules the replacement process.
   recordDurableCrashBreadcrumb('app_relaunch_requested', { ...data, reason })

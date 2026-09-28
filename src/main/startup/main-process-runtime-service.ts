@@ -74,7 +74,11 @@ export function initializeMainProcessRuntime(): OrcaRuntimeService {
   // `orca serve`, which never opens one, and the fleet path runs there too.
   const observedPaneIdentities = new AgentStatusObservedPaneIdentities()
   const runtime = new OrcaRuntimeService(store, stats, {
+    runtimeMode: state.isServeMode ? 'headless' : 'desktop',
     prepareClaudeAuth: (target) => state.claudeRuntimeAuth!.prepareForClaudeLaunch(target),
+    runtimeProfile: state.activeOrcaProfile
+      ? { id: state.activeOrcaProfile.profile.id, name: state.activeOrcaProfile.profile.name }
+      : undefined,
     agentSessionClaimSigner: loadAgentSessionClaimSigner(
       getProfileUserDataPath(),
       getProfileUserDataPath()

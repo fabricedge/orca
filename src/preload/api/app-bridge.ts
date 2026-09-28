@@ -13,6 +13,15 @@ import { awaitBeforeUnloadCheckpoint, startupDiagnosticsEnabled } from '../prelo
 import type { PreloadApi } from '../api-types'
 
 export const appApi = {
+  linuxHeadlessService: {
+    getStatus: () => ipcRenderer.invoke('linuxHeadlessService:getStatus'),
+    install: (config: { pairingAddress: string; port: number }) =>
+      ipcRenderer.invoke('linuxHeadlessService:install', config),
+    enableBackgroundLogin: () => ipcRenderer.invoke('linuxHeadlessService:enableLinger'),
+    setRunning: (running: boolean) =>
+      ipcRenderer.invoke('linuxHeadlessService:setRunning', running),
+    remove: () => ipcRenderer.invoke('linuxHeadlessService:remove')
+  },
   getIdentity: (): Promise<AppIdentity> => ipcRenderer.invoke('app:getIdentity'),
   getFeatureWallAssetBaseUrl: (): Promise<string> =>
     ipcRenderer.invoke('app:getFeatureWallAssetBaseUrl'),

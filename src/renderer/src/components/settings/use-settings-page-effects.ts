@@ -37,6 +37,7 @@ export function useSettingsPageEffects(
     setMountedSectionIds,
     setQuickCommandAddIntentSignal,
     setRemoteServerAddIntentSignal,
+    setHeadlessServiceIntentSignal,
     setSettingsProjectHostSelection,
     setSshHostAddIntentSignal,
     setPendingNavRequestTick,
@@ -203,6 +204,12 @@ export function useSettingsPageEffects(
         useAppStore.getState().setAppearanceAccordionDeepLink(accordion)
       }
     }
+    if (
+      settingsNavigationTarget.pane === 'servers' &&
+      settingsNavigationTarget.sectionId === 'linux-headless-service'
+    ) {
+      setHeadlessServiceIntentSignal((signal) => signal + 1)
+    }
     if (settingsNavigationTarget.intent === 'add-quick-command') {
       setQuickCommandAddIntentSignal((signal) => signal + 1)
     } else if (settingsNavigationTarget.intent === 'add-ssh-host') {
@@ -230,6 +237,7 @@ export function useSettingsPageEffects(
     setPendingNavRequestTick,
     setQuickCommandAddIntentSignal,
     setRemoteServerAddIntentSignal,
+    setHeadlessServiceIntentSignal,
     setSettingsProjectHostSelection,
     setSshHostAddIntentSignal,
     settings,

@@ -3,8 +3,46 @@ import { recoverLegacyWorkerTerminalsForRendererStartup } from './legacy-worker-
 import { logStartupMilestone } from './startup-diagnostics'
 import { mainProcessState as state } from './main-process-state'
 import { resolveOpenedMarkdownDocuments } from './os-opened-markdown-files'
+import type { LinuxHeadlessServiceConfig } from '../../shared/linux-headless-service'
+import {
+  enableLinuxHeadlessServiceLinger,
+  getLinuxHeadlessServiceSnapshot,
+  installLinuxHeadlessService,
+  removeLinuxHeadlessService,
+  setLinuxHeadlessServiceRunning
+} from '../linux-headless-service'
 
 export function registerMainProcessIpcHandlers(): void {
+  ipcMain.handle('linuxHeadlessService:getStatus', () => getLinuxHeadlessServiceSnapshot())
+  ipcMain.handle('linuxHeadlessService:enableLinger', () => enableLinuxHeadlessServiceLinger())
+  ipcMain.handle('linuxHeadlessService:install', (_event, input: unknown) => {
+    if (!input || typeof input !== 'object') {
+      throw new Error('Invalid headless service configuration.')
+    }
+    const pairingAddress = 'pairingAddress' in input ? input.pairingAddress : undefined
+    const port = 'port' in input ? input.port : undefined
+    const overwriteExisting = 'overwriteExisting' in input ? input.overwriteExisting : undefined
+    if (
+      typeof pairingAddress !== 'string' ||
+      typeof port !== 'number' ||
+      (overwriteExisting !== undefined && typeof overwriteExisting !== 'boolean')
+    ) {
+      throw new Error('Invalid headless service configuration.')
+    }
+    const config: LinuxHeadlessServiceConfig = {
+      pairingAddress,
+      port,
+      ...(overwriteExisting !== undefined ? { overwriteExisting } : {})
+    }
+    return installLinuxHeadlessService(config)
+  })
+  ipcMain.handle('linuxHeadlessService:setRunning', (_event, input: unknown) => {
+    if (typeof input !== 'boolean') {
+      throw new Error('Invalid headless service action.')
+    }
+    return setLinuxHeadlessServiceRunning(input)
+  })
+  ipcMain.handle('linuxHeadlessService:remove', () => removeLinuxHeadlessService())
   ipcMain.handle('app:awaitFirstWindowStartupServices', async () => {
     await Promise.all([
       state.firstWindowStartupServicesReady,

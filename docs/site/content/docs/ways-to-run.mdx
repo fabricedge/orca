@@ -54,6 +54,8 @@ Keep Orca running on a machine you control—an old laptop, Mac mini, home serve
 
 For a headless Linux server or service-managed VM, use `orca serve` as the alternative. On Linux the CLI is named `orca-ide`, so the first launch is:
 
+On a Linux desktop install, Settings also offers **Run Orca headless 24/7** to install a user systemd service that starts at boot without a login. See [Remote Orca Servers → Headless Linux at boot](/docs/remote-servers#headless-linux-at-boot) for details.
+
 ```bash
 orca-ide serve --pairing-address <reachable-tailscale-ip-or-hostname>
 ```

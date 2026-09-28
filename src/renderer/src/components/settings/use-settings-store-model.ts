@@ -128,6 +128,7 @@ export function useSettingsStoreModel() {
   const [quickCommandAddIntentSignal, setQuickCommandAddIntentSignal] = useState(0)
   const [sshHostAddIntentSignal, setSshHostAddIntentSignal] = useState(0)
   const [remoteServerAddIntentSignal, setRemoteServerAddIntentSignal] = useState(0)
+  const [headlessServiceIntentSignal, setHeadlessServiceIntentSignal] = useState(0)
   const [hasUnsavedCommitPromptChanges, setHasUnsavedCommitPromptChanges] = useState(false)
   const [hasUnsavedBranchPromptChanges, setHasUnsavedBranchPromptChanges] = useState(false)
   const [sourceControlAiPromptDiscardSignal, setSourceControlAiPromptDiscardSignal] = useState(0)
@@ -200,6 +201,8 @@ export function useSettingsStoreModel() {
     setSshHostAddIntentSignal,
     remoteServerAddIntentSignal,
     setRemoteServerAddIntentSignal,
+    headlessServiceIntentSignal,
+    setHeadlessServiceIntentSignal,
     hasUnsavedCommitPromptChanges,
     setHasUnsavedCommitPromptChanges,
     hasUnsavedBranchPromptChanges,

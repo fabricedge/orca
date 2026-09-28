@@ -1,5 +1,8 @@
 # Headless Linux Server
 
+For the GUI button location, local preview instructions, and service/mobile
+workflow in Portuguese, see [Guia da GUI e do headless](./orca-headless-guia-pt-br.md).
+
 Use this guide when you want to run `orca serve` on a Linux machine without a
 desktop session, such as an Ubuntu VPS or a remote build box.
 
@@ -18,6 +21,60 @@ The supported deployment matrix covers Ubuntu 20.04, 22.04, and 24.04 and
 current Debian stable — anything with glibc 2.31 or newer (see
 [Linux glibc compatibility](./linux-glibc-compatibility.md)). Package names can
 differ on other Debian-derived releases.
+
+## Enable 24/7 mode from Orca
+
+The **Headless** button is in the bottom status bar next to **Keep computer
+awake** (the coffee icon). In compact layouts it shows a server icon only.
+Choose **Configure headless server…** to open **Share this host** and briefly
+highlight the service section. Local Linux previews also support installation
+as a non-root user: the unit launches the local Electron executable with the app
+root and the GUI's development data directory. Keep the checkout and built
+dependencies in place. When an app update keeps the executable path, the unit
+does not need to be rewritten; a running process must restart to load the new
+code. Reinstall the unit only if the executable path changes.
+
+For an installed desktop Orca on Linux, open **Settings → Remote Orca Servers →
+Share this host** and use **Run Orca headless 24/7**. Leave the address blank
+to let Orca choose one each time the service starts, preferring Tailscale when
+available. Enter a hostname or IP to always advertise that address. Set the
+server port, then enable the service. Orca
+checks for Xvfb and installs it with the system package manager if needed, then
+creates `~/.config/systemd/user/orca-serve.service` and enables systemd linger
+for the current account through the system's authorization prompt. These
+authorization requests happen only after enabling the service in the GUI.
+Linger keeps
+the user service manager alive and starts it at boot, before that account logs
+in. If that unit name already exists, Orca asks before replacing its contents;
+confirming may stop the service currently using it. The service uses the same
+account and loads that account's active Orca profile when it starts. If you
+switch profiles in the desktop app later, restart the service to load the newly
+active profile. The paired mobile client shows the host name and the profile
+loaded by the running server, along with the projects registered in that profile.
+
+The desktop and headless server share one profile, so only one can own it at a
+time. Enabling the service leaves Orca open and arms it for startup at boot.
+When you later close Orca normally, it starts the service after the desktop
+process releases its profile. The **Keep server running outside Orca** control
+only arms or disarms that behavior; it never closes Orca. No terminal command
+is required for the GUI workflow.
+
+The service is also enabled for the next boot. Check it with
+`systemctl --user status orca-serve.service` and inspect logs with
+`journalctl --user -u orca-serve.service -f`. Orca's **Remove service** action
+disables and removes the unit but leaves account linger and persisted Orca data
+intact.
+
+The service uses the packaged executable path current when it is installed. If
+you move an AppImage, remove and enable the service again from the new location.
+Headless mode does not self-update; install a new build and recreate or update
+the service as needed. Whether restarting the service preserves live terminals
+depends on the terminal daemon's systemd scope; check `health.terminalDaemon.cgroupUnit`
+before stopping it. A null or unverifiable value means the stop may end active
+terminal and agent processes.
+
+For a machine without a graphical Orca session, continue with the manual
+systemd setup below.
 
 ## Ubuntu and Debian prerequisites
 
@@ -231,42 +288,17 @@ Replace `100.64.1.20` with the LAN, Tailscale, tunnel, or public hostname that
 clients should use.
 
 `KillMode=mixed` sends the graceful stop signal only to Orca's main process,
-then `SIGKILL`s whatever is still in the cgroup the instant that main process
-exits — `TimeoutStopSec` only governs how long systemd waits for the main
-process itself, never a grace window for the cgroup's remains. This lets Orca
-keep its owned Xvfb alive until Electron disconnects cleanly.
+then retains systemd's cgroup-wide `SIGKILL` fallback if shutdown times out.
+This lets Orca keep its owned Xvfb alive until Electron disconnects cleanly.
 
-The detached terminal daemon is preserved by a different mechanism: it is
-launched through `systemd-run --user --scope`, so it and its PTYs live in their
-own transient `orca-daemon-<launch-nonce>.scope` unit rather than in
-`orca-serve.service`'s cgroup. A `systemctl stop` or `restart` of this unit
-leaves that scope running, so live terminals and agent processes survive the
-restart and the successor adopts them.
-
-That requires a reachable systemd **user** manager for the service account.
-With `User=orca` and no interactive login there is none by default, so enable
-lingering once:
-
-```bash
-sudo loginctl enable-linger orca
-```
-
-Without it — or on a host without systemd as PID 1, or without `systemd-run`
-on `PATH` — the daemon falls back to launching directly inside
-`orca-serve.service`'s cgroup, and is then killed when the stop completes:
-every `systemctl stop` or `restart` ends live terminals and agent processes,
-even though their persisted layout and terminal history remain. Check which
-case a running host is in with the `cgroupUnit` field of the daemon health
-payload: a `orca-daemon-*.scope` value means isolated, `null` means the
-unscoped fallback.
-
-None of this applies inside a Docker container. There the capability probe
-fails closed (no `/run/systemd/system`), but that is the least of it: a
-`docker restart` tears down the container's PID namespace, so no in-container
-setting — lingering, kill mode, or scope — preserves the daemon or its PTYs
-across it. Run the container with `--init` so a real PID 1 reaps exited PTY
-subprocesses; without it, Orca is PID 1 and those children accumulate as
-zombies because nothing reaps them.
+The detached terminal daemon runs through `systemd-run --user --scope` when a
+systemd user manager is available. In that case, the daemon and its PTYs live in
+their own `orca-daemon-<launch-nonce>.scope`, and stopping this service leaves
+that scope running for the successor to adopt. If the daemon falls back to the
+service cgroup, stopping or restarting the service ends its live terminals and
+agent processes, even though their persisted layout and terminal history remain.
+Check `health.terminalDaemon.cgroupUnit` on that host; treat a null or
+unverifiable value as destructive.
 
 Exit status `3` means another process already owns this userData profile, so
 `RestartPreventExitStatus=3` stops the unit instead of retrying a launch that
@@ -345,7 +377,6 @@ WorkingDirectory=/home/orca
 Environment=DISPLAY=:99
 Environment=LIBGL_ALWAYS_SOFTWARE=1
 ExecStart=/opt/orca/orca-linux.AppImage serve --port 6768 --pairing-address 100.64.1.20
-KillMode=mixed
 Restart=on-failure
 RestartPreventExitStatus=3
 RestartSec=5
@@ -353,11 +384,6 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 ```
-
-`KillMode=mixed` matters as much here as in the single-service unit: without it
-the unit silently defaults to `KillMode=control-group`, which `SIGTERM`s the
-whole cgroup at once and then stalls the full `TimeoutStopSec` before the
-`SIGKILL`.
 
 Enable both units:
 
@@ -1008,3 +1034,63 @@ profile` and the unit exits `3`: another process already owns the profile, so
   The Electron binary is `orca-ide`, not `orca`; `ldd` on a path that does not
   exist prints nothing and exits cleanly, which reads as a clean result in
   exactly the situation where you are hunting a missing library.
+
+## CLI management
+
+The packaged Linux CLI can manage the same per-user `orca-serve.service` used by
+the GUI. These commands run locally and do not require Orca to be open:
+
+```sh
+orca-ide headless status
+orca-ide headless install --pairing-address auto --port 6768
+orca-ide headless start
+orca-ide headless stop
+orca-ide headless remove
+```
+
+In a Linux development checkout, `orca-dev headless install` targets that
+checkout's Electron executable and development data directory. Build the CLI
+first with `pnpm run build:cli`, then keep the checkout and its dependencies in
+place while the service is installed.
+
+Installation enables lingering so the service can run after logout and at boot.
+If a unit already occupies the service path, the CLI asks before replacing it;
+use `--yes` to confirm in automation. Add `--json` to get machine-readable
+status and command results.
+
+## Debian 13 GNOME validation
+
+The Linux headless package was installed and exercised in a Debian 13 GNOME VM
+under QEMU with 4 vCPUs, 4 GiB RAM, and user-mode NAT. The `.deb` was built in a
+Debian 11 environment so its native modules meet Orca's glibc 2.31 compatibility
+floor. The package installed with `apt` and registered `orca-ide` as the CLI
+name; on GNOME, bare `orca` belongs to the Orca screen reader.
+
+The validation installed the service through `orca-ide headless install`,
+confirmed that an existing unit is rejected unless `--yes` is supplied, and
+changed its pairing port from 17689 back to 17688. `orca-ide headless start`
+created the Xvfb-backed service and served the web client with HTTP 200. After a
+VM reboot, the service remained enabled and active with `linger: true` while
+GDM was still showing its login screen and no graphical session for the test
+user existed. QEMU forwarded host `127.0.0.1:17688` to the guest's port 17688;
+the configured pairing address therefore used `127.0.0.1` for this NAT test.
+
+The settings address selector, overwrite confirmation, mobile connection
+indicator, and project availability classification are covered by the focused
+renderer tests. The VM run verified package installation, CLI management,
+headless startup, the served web client, and startup after reboot; it did not
+visually drive the settings page or complete pairing from a physical phone.
+
+## Which projects the phone sees
+
+The paired web/mobile client reads the project list live from the Orca runtime
+it is connected to. The Linux headless service runs as the same user and uses
+that user's active Orca profile, so it serves that profile's project catalog.
+The connection badge names the Linux host. Tap it to see which projects have a
+ready local setup or registered local repo, and which projects this profile
+knows about but are not ready on this PC. Those labels reflect live catalog
+data from the paired runtime; they do not verify that a repo's files are still
+present. Project catalogs on other Orca hosts are independent, and Orca cannot
+count projects on hosts the phone has not connected to. If a project expected
+from this PC is missing, check that the desktop and headless service are using
+the same Orca profile.

@@ -63,6 +63,13 @@ export function browserUnavailableMessage(
 
 export type RuntimeStatus = {
   runtimeId: string
+  /** Optional for mixed-version peers; headless marks a server launched with `orca serve`. */
+  runtimeMode?: 'desktop' | 'headless'
+  /** Machine name for clients to distinguish the host they are connected to. */
+  hostName?: string
+  /** Profile pinned when this runtime started; clients can identify its project catalog. */
+  profileId?: string
+  profileName?: string
   /** Authenticated requester identity. Missing for in-process callers and older hosts. */
   pairedDeviceId?: string
   rendererGraphEpoch: number

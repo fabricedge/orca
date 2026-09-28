@@ -124,6 +124,35 @@ Orca creates a separate, revocable token for each paired client. The server list
 
 Use `orca serve` when the host should run without the desktop window—for example, a headless Linux server or a service-managed VM. For a MacBook or desktop you can leave signed in, the in-app setup above is simpler.
 
+On a packaged Linux desktop, **Settings → Remote Orca Servers → Share this host → Run Orca headless 24/7** installs a user systemd service and enables linger so it starts at boot without a Linux login. The service shares the same Orca profile as the desktop app, so quit the desktop app before starting it. See [Headless Linux at boot](#headless-linux-at-boot) for lifecycle commands and limitations.
+
+### Headless Linux at boot
+
+In **Settings → Remote Orca Servers → Share this host**, enter the address your clients can reach
+(a Tailscale address is recommended) and the port, then choose **Enable at boot**. Orca installs
+`~/.config/systemd/user/orca-serve.service` and asks for administrator authorization once to enable
+systemd linger for your account. Linger lets the user service manager start at boot and keep running
+after logout. If Xvfb is missing, Orca asks for administrator authorization to install it. The service
+runs as your account and uses the same Orca profile as the desktop app.
+
+The desktop app and headless service cannot use that profile at the same time. After enabling the
+service, quit the desktop app before starting the service:
+
+```bash
+systemctl --user start orca-serve.service
+systemctl --user status orca-serve.service
+journalctl --user -u orca-serve.service -f
+```
+
+The service starts automatically at the next boot. Its startup logs include a pairing URL; treat
+that URL like a password and share it only with the intended client. Keep the server on a private
+network path such as Tailscale or a trusted LAN. Use `systemctl --user stop orca-serve.service` to
+stop the server before opening Orca desktop again. Stopping or restarting may interrupt active
+terminal and agent processes; check the terminal daemon's systemd scope before stopping it. **Remove
+service** in Settings disables and removes the unit without deleting Orca
+data; it leaves linger enabled for the account. For full package prerequisites and AppImage notes,
+see the [Headless Linux Server guide](https://github.com/stablyai/orca/blob/main/docs/reference/headless-linux-server.md#ubuntu-and-debian-prerequisites).
+
 Install Orca and its bundled CLI on the server, then run:
 
 <Callout title="On Linux, start it with orca-ide serve">

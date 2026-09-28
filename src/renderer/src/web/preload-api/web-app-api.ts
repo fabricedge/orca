@@ -6,8 +6,25 @@ import { readLocalWebUIState } from './web-preferences-store'
 import { UI_STORAGE_KEY, writeJson } from './web-storage'
 
 export function createWebAppApi(): Partial<PreloadApi> {
+  const unsupportedHeadlessService = {
+    supported: false,
+    installed: false,
+    enabled: false,
+    active: false,
+    linger: false,
+    pairingAddress: null,
+    port: null
+  }
+
   return {
     app: {
+      linuxHeadlessService: {
+        getStatus: () => Promise.resolve(unsupportedHeadlessService),
+        install: () => Promise.resolve(unsupportedHeadlessService),
+        enableBackgroundLogin: () => Promise.resolve(unsupportedHeadlessService),
+        setRunning: () => Promise.resolve(unsupportedHeadlessService),
+        remove: () => Promise.resolve(unsupportedHeadlessService)
+      },
       getIdentity: () =>
         Promise.resolve({
           name: 'Orca',

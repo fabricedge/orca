@@ -15,6 +15,10 @@ vi.mock('./MachineNameField', () => ({
   )
 }))
 
+vi.mock('./LinuxHeadlessServiceSection', () => ({
+  LinuxHeadlessServiceSection: () => <div data-testid="linux-headless-service" />
+}))
+
 import { RuntimeServerShareSection } from './runtime-server-workflow-sections'
 
 describe('RuntimeServerShareSection', () => {

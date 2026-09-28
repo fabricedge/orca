@@ -33,6 +33,7 @@ export function renderServersSettingsSection(context: SettingsRenderContext): Re
           canGeneratePairingUrl={!model.isWebClient}
           allowLocalRuntime={!model.isWebClient}
           addServerIntentSignal={model.remoteServerAddIntentSignal}
+          headlessServiceIntentSignal={model.headlessServiceIntentSignal}
         />
       ) : null}
     </SettingsSection>
