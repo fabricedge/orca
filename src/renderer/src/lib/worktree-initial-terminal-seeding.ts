@@ -2,7 +2,9 @@ import type {
   WorktreeDefaultTabsLaunch,
   WorktreeSetupLaunch
 } from '../../../shared/worktree/launch-types'
+import type { ExecutionHostId } from '../../../shared/execution-host'
 import { shouldAutoCreateInitialTerminal } from '@/components/terminal/initial-terminal'
+import { isTerminalWorkspaceEmptiedOnPurpose } from '../../../shared/closed-terminal-tab-tombstones'
 import { createSequencedSetupAgentCommands } from '../../../shared/setup-agent-sequencing'
 import { getSetupRunnerCommandPlatformForPath } from '../../../shared/setup-runner-command'
 import { agentKindToTuiAgent } from '../../../shared/agent-kind'
@@ -35,14 +37,18 @@ function getSetupRunnerCommandPlatformForLaunch(setup: WorktreeSetupLaunch): 'wi
   )
 }
 
-/** After the async activation gate reports an empty workspace: re-seed a shell unless the caller
- *  promised its own surface or the user has already moved on. */
+/** Re-seed after an empty gate unless its activation owns the surface or no longer owns the host. */
 export function reseedGatedEmptyWorkspace(
   workspaceKey: string,
-  callerProvidesSurface: boolean | undefined
+  callerProvidesSurface: boolean,
+  executionHostId?: ExecutionHostId
 ): void {
   const state = useAppStore.getState()
-  if (callerProvidesSurface === true || state.activeWorktreeId !== workspaceKey) {
+  if (
+    callerProvidesSurface === true ||
+    state.activeWorktreeId !== workspaceKey ||
+    (executionHostId !== undefined && state.activeWorkspaceExecutionHostId !== executionHostId)
+  ) {
     return
   }
   ensureWorktreeHasInitialTerminal(
@@ -169,7 +175,7 @@ export function ensureWorktreeHasInitialTerminal(
   // terminal is added; and closeTabPreservingPty (use-terminal-pane-lifecycle.ts) skips both
   // deactivation hooks for pane moves and retirement, where re-seeding is the wanted outcome.
   const shouldHonourClosedTerminalTombstone =
-    Object.hasOwn(store.tabsByWorktree, worktreeId) && opts?.reseedEmptiedWorkspace !== true
+    isTerminalWorkspaceEmptiedOnPurpose(store, worktreeId) && opts?.reseedEmptiedWorkspace !== true
   // Why: an execution host that has not answered is not a host with no terminals; seeding into that
   // gap is what adds a tab per launch (STA-4658). Explicit launch work below is a request to create
   // a terminal now, so it stays ungated.

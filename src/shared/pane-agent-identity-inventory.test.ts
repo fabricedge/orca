@@ -59,8 +59,6 @@ const INVENTORY: readonly InventoryGroup[] = [
       ['src/renderer/src/components/automations/AutomationListLocalRow.tsx', 2],
       'src/renderer/src/components/automations/automation-draft-model.ts',
       ['src/renderer/src/components/automations/automation-list-search-rows.ts', 2],
-      ['src/renderer/src/components/dashboard-popout/AgentMapSnapshotWorkspaceMenu.tsx', 2],
-      ['src/renderer/src/components/dashboard-popout/AgentMapWorktreeRingNode.tsx', 2],
       ['src/renderer/src/components/settings/NativeChatSupportedAgents.tsx', 2],
       ['src/renderer/src/components/settings/QuickCommandsList.tsx', 2],
       ['src/renderer/src/components/tab-bar/TabBarQuickCommandItem.tsx', 2],
@@ -122,7 +120,7 @@ const INVENTORY: readonly InventoryGroup[] = [
       ['src/shared/agent-title-core.ts', 4],
       ['src/shared/agent-title-evidence.ts', 2],
       ['src/shared/agent-title-identity.ts', 11],
-      ['src/shared/terminal-title-agent-type.ts', 14]
+      ['src/shared/terminal-title-agent-type.ts', 15]
     ]
   },
   {
@@ -150,6 +148,7 @@ const INVENTORY: readonly InventoryGroup[] = [
     classification: 'identity-consumer',
     paths: [
       ['mobile/src/session/mobile-terminal-tab-agent.ts', 2],
+      ['src/main/runtime/tui-idle-evidence.ts', 2],
       ['src/renderer/src/lib/open-tab-occupant-agent.ts', 2],
       ['src/renderer/src/lib/use-tab-agent.ts', 3]
     ]
@@ -309,7 +308,8 @@ const INVENTORY: readonly InventoryGroup[] = [
       ['src/renderer/src/components/terminal-pane/agent-completion-title-observer.ts', 2],
       ['src/renderer/src/components/terminal-pane/pty-connection/shell-command-inference.ts', 4],
       ['src/renderer/src/components/terminal-pane/pty-output-title-observer.ts', 2],
-      ['src/shared/terminal-output-side-effects.ts', 3]
+      ['src/shared/terminal-output-side-effects.ts', 3],
+      ['src/shared/tui-agent-rest-signal.ts', 2]
     ]
   },
   {
@@ -435,11 +435,6 @@ const DIRECT_SINGLE_SOURCE_SURFACES: readonly {
     path: 'mobile/src/session/mobile-native-chat-image-send.ts',
     classification: 'action-consumer',
     marker: 'pasteMobileNativeChatImagePaths'
-  },
-  {
-    path: 'mobile/src/session/pr-ai-triage-launch.ts',
-    classification: 'action-consumer',
-    marker: 'createTerminalAndSendPrompt'
   }
 ]
 

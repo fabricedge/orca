@@ -9,6 +9,11 @@ import {
   type TerminalQuickCommandMutation
 } from '../../shared/terminal-quick-commands'
 import { haveSameDisabledTuiAgents } from '../../shared/tui-agent-selection'
+import { normalizeSourceControlAiSettings } from '../../shared/source-control-ai'
+import {
+  SOURCE_CONTROL_LAUNCH_ACTION_IDS,
+  type SourceControlAiActionDefaults
+} from '../../shared/source-control-ai-actions'
 import type { GlobalSettings } from '../../shared/global-settings-types'
 import { applyNativeChatSessionOptionSettingsMutation } from '../../shared/native-chat-session-option-defaults'
 import type { NativeChatSessionOptionSettingsMutation } from '../../shared/native-chat-session-options'
@@ -27,6 +32,7 @@ export type RuntimeClientSettings = Pick<
   | 'agentDefaultArgs'
   | 'agentDefaultEnv'
   | 'agentStatusHooksEnabled'
+  | 'terminalCopyTrimsGutter'
   | 'defaultTaskSource'
   | 'defaultTaskViewPreset'
   | 'visibleTaskProviders'
@@ -45,9 +51,14 @@ export type RuntimeClientSettings = Pick<
   | 'artifactSharingEnabled'
   | 'worktreeVisibilityDefaults'
   | 'agentSkillSharingEnabled'
+  | 'machineName'
 > & {
   hostSettingOverrides: RuntimeHostDisplayLabelOverrides
+  sourceControlAi: RuntimeClientSourceControlAi
 }
+
+/** The saved per-action launch recipes (agent, prompt template, agent args), already migrated. */
+export type RuntimeClientSourceControlAi = { actions: SourceControlAiActionDefaults }
 
 /** Safe paired projection: host labels only; filesystem defaults stay host-private. */
 export type RuntimeHostDisplayLabelOverrides = Partial<
@@ -74,6 +85,7 @@ export type RuntimeClientSettingsUpdate = Pick<
   | 'minimaxEndpoint'
   | 'prBotAuthorOverrides'
   | 'worktreeVisibilityDefaults'
+  | 'machineName'
 >
 
 export class RuntimeClientSettingsController {
@@ -81,7 +93,7 @@ export class RuntimeClientSettingsController {
   private reconciliationTail: Promise<void> = Promise.resolve()
 
   constructor(
-    private readonly store: RuntimeStore | null,
+    private readonly store: Pick<RuntimeStore, 'getSettings' | 'updateSettings'> | null,
     private readonly notifyReposChanged: (() => void) | undefined = undefined
   ) {}
 
@@ -97,11 +109,17 @@ export class RuntimeClientSettingsController {
       agentDefaultArgs: settings.agentDefaultArgs ?? {},
       agentDefaultEnv: settings.agentDefaultEnv ?? {},
       agentStatusHooksEnabled: settings.agentStatusHooksEnabled !== false,
+      // Why projected: mobile's terminal Copy honours this, and a host predating
+      // the setting sends no key, which the client reads as on (#19770).
+      terminalCopyTrimsGutter: settings.terminalCopyTrimsGutter !== false,
       defaultTaskSource: settings.defaultTaskSource ?? 'github',
       defaultTaskViewPreset: settings.defaultTaskViewPreset ?? 'issues',
       visibleTaskProviders: settings.visibleTaskProviders ?? [...TASK_PROVIDERS],
       defaultRepoSelection: settings.defaultRepoSelection ?? null,
-      defaultLinearTeamSelection: settings.defaultLinearTeamSelection ?? null,
+      // Persisted settings can violate the paired client's string-array contract.
+      defaultLinearTeamSelection: Array.isArray(settings.defaultLinearTeamSelection)
+        ? settings.defaultLinearTeamSelection.filter((id): id is string => typeof id === 'string')
+        : null,
       githubProjects: settings.githubProjects,
       experimentalNewWorktreeCardStyle: settings.experimentalNewWorktreeCardStyle === true,
       // The three that decide whether a new agent tab -- and so an orchestration worker -- is a
@@ -117,6 +135,10 @@ export class RuntimeClientSettingsController {
       artifactSharingEnabled: isArtifactSharingEnabled(settings),
       worktreeVisibilityDefaults: settings.worktreeVisibilityDefaults ?? { external: 'hide' },
       agentSkillSharingEnabled: isAgentSkillSharingEnabled(settings),
+      machineName: settings.machineName ?? '',
+      // Why projected: a paired client's AI buttons start these actions' agents, and must honour
+      // the agent saved for each one as the desktop does. Absent on older hosts.
+      sourceControlAi: projectSourceControlLaunchRecipes(settings),
       hostSettingOverrides: Object.fromEntries(
         [
           ...getHostDisplayLabelOverrides({ hostSettingOverrides: settings.hostSettingOverrides })
@@ -221,5 +243,22 @@ export class RuntimeClientSettingsController {
     })
     this.reconciliationTail = reconciliation.catch(() => {})
     return reconciliation
+  }
+}
+
+function projectSourceControlLaunchRecipes(
+  settings: Partial<Pick<GlobalSettings, 'sourceControlAi' | 'commitMessageAi'>>
+): RuntimeClientSourceControlAi {
+  const { actions } = normalizeSourceControlAiSettings(
+    settings.sourceControlAi,
+    settings.commitMessageAi
+  )
+  return {
+    actions: Object.fromEntries(
+      SOURCE_CONTROL_LAUNCH_ACTION_IDS.flatMap((actionId) => {
+        const recipe = actions?.[actionId]
+        return recipe ? [[actionId, recipe]] : []
+      })
+    )
   }
 }
