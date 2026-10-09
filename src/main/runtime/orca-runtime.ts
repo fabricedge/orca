@@ -1,3 +1,7 @@
+import type {
+  WorkspaceChromeChange,
+  WorkspaceChromeResult
+} from '../../shared/workspace-layout-chrome'
 import { installRuntimeLinearCommandSurface } from './runtime-linear-command-surface'
 import { OrcaRuntimeWithMigrationCatalog } from './orca-runtime-migration-catalog'
 import type { RuntimeCommandSurfaceHost } from './orca-runtime-core'
@@ -14,8 +18,58 @@ import type { AgentSessionRecordStore } from './agent-session-record-store'
 import { peekOpenedAgentSessionRecordStore } from './agent-session-record-store-slot'
 import { createAgentLaunchRecordWarmupGate } from './agent-launch-record-warmup-gate'
 import { registerDetectedWorktreeScanInvalidation } from '../ipc/worktrees/listing/register-detected-worktree-scan-invalidation'
+import {
+  describeWorkspaceTabLayout,
+  type WorkspaceTabLayoutDescription,
+  type WorkspaceTabLayoutAction
+} from '../../shared/workspace-tab-location'
 
 class OrcaRuntimeService extends OrcaRuntimeWithMigrationCatalog {
+  async workspaceLayoutChrome(
+    worktreeSelector: string,
+    chrome: WorkspaceChromeChange
+  ): Promise<WorkspaceChromeResult> {
+    const workspace = await this.resolveWorktreeSelector(worktreeSelector)
+    if (!this.notifier?.workspaceChrome || !this.getAvailableAuthoritativeWindow()) {
+      throw new Error('layout_owner_unavailable')
+    }
+    return this.notifier.workspaceChrome({ workspaceId: workspace.id, chrome })
+  }
+
+  async workspaceTabLayout(
+    worktreeSelector: string,
+    change?: { expectedRevision: string; action: WorkspaceTabLayoutAction }
+  ): Promise<WorkspaceTabLayoutDescription> {
+    const workspace = await this.resolveWorktreeSelector(worktreeSelector)
+    if (this.notifier?.workspaceLayout && this.getAvailableAuthoritativeWindow()) {
+      try {
+        return await this.notifier.workspaceLayout({ workspaceId: workspace.id, ...change })
+      } catch (error) {
+        if (
+          change ||
+          !(error instanceof Error) ||
+          error.message !== 'workspace_layout_not_loaded'
+        ) {
+          throw error
+        }
+      }
+    }
+    if (change) {
+      throw new Error('layout_owner_unavailable')
+    }
+    const session = this.getWorkspaceSessionForWorktree(workspace.id)
+    return describeWorkspaceTabLayout(
+      workspace.id,
+      {
+        tabs: session?.unifiedTabs?.[workspace.id] ?? [],
+        groups: session?.tabGroups?.[workspace.id] ?? [],
+        layout: session?.tabGroupLayouts?.[workspace.id] ?? null,
+        activeGroupId: session?.activeGroupIdByWorktree?.[workspace.id] ?? null
+      },
+      'saved'
+    )
+  }
+
   constructor(...args: ConstructorParameters<typeof OrcaRuntimeWithMigrationCatalog>) {
     super(...args)
     // Why: the runtime listing re-runs a scan the worktree-change generation overtook and re-lists

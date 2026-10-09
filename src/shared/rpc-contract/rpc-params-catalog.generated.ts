@@ -550,6 +550,7 @@ import {
   TerminalUpdateViewport
 } from './terminal-viewport-schemas-params'
 import { UpdaterCheckParams } from './updater-params'
+import { WorkspaceLayoutChange, WorkspaceLayoutChrome } from './workspace-layout-params'
 import { WorkspacePortKillParams, WorkspacePortScanParams } from './workspace-ports-params'
 import { WorktreeCreate, WorktreePrefetchCreateBase } from './worktree-create-params'
 import {
@@ -1230,6 +1231,9 @@ export const RPC_PARAMS_BY_METHOD = {
   'updater.download': null,
   'updater.getStatus': null,
   'updater.install': null,
+  'workspace.layout.change': WorkspaceLayoutChange,
+  'workspace.layout.chrome': WorkspaceLayoutChrome,
+  'workspace.layout.show': WorktreeTabSelector,
   'workspacePorts.kill': WorkspacePortKillParams,
   'workspacePorts.scan': WorkspacePortScanParams,
   'worktree.activate': WorktreeActivate,

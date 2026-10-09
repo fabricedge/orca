@@ -20,8 +20,10 @@ import { SKILL_COMMAND_SPECS } from './skills'
 import { ARTIFACT_COMMAND_SPECS } from './artifacts'
 import { SEARCH_COMMAND_SPECS } from './search'
 import { PROFILE_STATE_COMMAND_SPECS } from './profile-state'
+import { LAYOUT_COMMAND_SPECS } from './layout'
 
 export const COMMAND_SPECS: CommandSpec[] = [
+  ...LAYOUT_COMMAND_SPECS,
   ...CORE_COMMAND_SPECS,
   ...ARTIFACT_COMMAND_SPECS,
   ...ACCOUNT_COMMAND_SPECS,

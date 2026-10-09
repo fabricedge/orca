@@ -1,5 +1,13 @@
+import type {
+  WorkspaceChromeChange,
+  WorkspaceChromeResult
+} from '../../shared/workspace-layout-chrome'
 import type { AgentLaunchPaneVerdictEvent } from '../../shared/agent-launch-pane-verdict'
 import type { SleepingAgentLaunchConfig } from '../../shared/agent-session-resume'
+import type {
+  WorkspaceTabLayoutRequest,
+  WorkspaceTabLayoutDescription
+} from '../../shared/workspace-tab-location'
 import type {
   AgentLaunchTabPublished,
   AgentLaunchTabPublishRequest
@@ -109,6 +117,13 @@ export type RuntimeNotifier = {
   focusTerminal(tabId: string, worktreeId: string, leafId?: string | null): void
   focusEditorTab?(tabId: string, worktreeId: string): void
   closeSessionTab?(tabId: string, worktreeId: string): void | Promise<void>
+  workspaceChrome?(request: {
+    workspaceId: string
+    chrome: WorkspaceChromeChange
+  }): Promise<WorkspaceChromeResult>
+  workspaceLayout?(
+    request: Omit<WorkspaceTabLayoutRequest, 'requestId' | 'expiresAt'>
+  ): Promise<WorkspaceTabLayoutDescription>
   moveSessionTab?(worktreeId: string, move: RuntimeMobileSessionTabMove): void
   /**
    * Acts only on the host's own window: 'host'/'all' move it, 'caller'/'clients' open without moving
