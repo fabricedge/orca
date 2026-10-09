@@ -1,3 +1,4 @@
+import type { WorkspaceChromeChange, WorkspaceChromeResult } from './workspace-layout-chrome'
 import type { Tab, TabGroup, TabGroupLayoutNode } from './tab-types'
 import { sha256 } from './sha256'
 
@@ -115,12 +116,14 @@ export type WorkspaceTabLayoutRequest = {
   requestId: string
   workspaceId: string
   expiresAt: number
+  chrome?: WorkspaceChromeChange
   expectedRevision?: string
   action?: WorkspaceTabLayoutAction
 }
 
 export type WorkspaceTabLayoutResponse = {
   requestId: string
+  chrome?: WorkspaceChromeResult
   layout?: WorkspaceTabLayoutDescription
   error?: string
 }

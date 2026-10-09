@@ -7,6 +7,7 @@ import {
   WorktreeTabSelector
 } from './session-tabs-schemas'
 import { SESSION_TAB_CLOSE_METHODS } from './session-tab-close-methods'
+import { WORKSPACE_LAYOUT_METHODS } from './workspace-layout'
 import {
   listSessionTabsInventory,
   projectSessionTabsForClient,
@@ -21,6 +22,7 @@ import { SessionTabsUnsubscribeAllParams } from '../../../../shared/rpc-contract
 import { SESSION_TABS_SPLIT_GROUP_PLACEMENT_RUNTIME_CAPABILITY } from '../../../../shared/protocol-version'
 
 export const SESSION_TAB_METHODS = [
+  ...WORKSPACE_LAYOUT_METHODS,
   defineMethod({
     name: 'session.tabs.list',
     permission: 'workspace',

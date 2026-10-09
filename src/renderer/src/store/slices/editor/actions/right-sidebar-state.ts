@@ -61,6 +61,10 @@ export type RightSidebarState = {
   setActivityBarPosition: (position: ActivityBarPosition) => void
 }
 
+export function rightSidebarOpenPatch(open: boolean) {
+  return { rightSidebarOpen: open, ...(open ? {} : { rightSidebarVisual: null }) }
+}
+
 export function createRightSidebarState(set: EditorSet, _get: EditorGet): RightSidebarState {
   return {
     rightSidebarOpen: false,
@@ -78,8 +82,7 @@ export function createRightSidebarState(set: EditorSet, _get: EditorGet): RightS
         rightSidebarOpen: !s.rightSidebarOpen,
         ...(s.rightSidebarOpen ? { rightSidebarVisual: null } : {})
       })),
-    setRightSidebarOpen: (open) =>
-      set({ rightSidebarOpen: open, ...(open ? {} : { rightSidebarVisual: null }) }),
+    setRightSidebarOpen: (open) => set(rightSidebarOpenPatch(open)),
     setRightSidebarWidth: (width) => set({ rightSidebarWidth: width }),
     setRightSidebarTab: (tab) =>
       set((s) => ({

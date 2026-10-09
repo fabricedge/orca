@@ -22,6 +22,33 @@ Use `orca` when Orca's running editor/runtime is the source of truth. Use plain 
 
 Prefer `--json` for agent-driven calls. If the CLI is missing, say so explicitly instead of inspecting source files first.
 
+## Tab location and layout
+
+Tab headers offer **Copy Tab ID**, which copies `orcaTabId: <id>`, and **Copy Tab Details**, which copies the tab's workspace, group, order, and workspace split tree. Tab IDs and organization are stored in Orca's workspace session, outside the project files.
+
+```text
+ORCA layout chrome --json
+ORCA layout chrome --left hide --right hide --dry-run --json
+ORCA layout chrome --left hide --right hide --json
+ORCA layout self --json
+ORCA layout show --worktree id:<workspaceId> --json
+ORCA layout show --worktree id:<workspaceId> --tab 'orcaTabId: <id>' --json
+ORCA layout move --worktree id:<workspaceId> --tab <id> --group <groupId> --index 0 --json
+ORCA layout split --worktree id:<workspaceId> --tab <id> --group <groupId> --direction right --json
+ORCA layout arrange --worktree id:<workspaceId> --preset grid-2x2 --tabs '<a>,<b>,<c>,<d>' --json
+```
+
+- `layout chrome` controls the owning desktop window’s sidebars, independently from tab arrangement. With no visibility flags it reads current state; `--left` and `--right` accept `show`, `hide` or `toggle`. Prefer explicit show/hide. `--dry-run` returns current and proposed visibility without changing state. Widths and selected sections are preserved; hiding the right panel dismisses its temporary visual just like its UI close control. The target workspace must be active; no workspace switching occurs. Reads and writes require a desktop owner and `workspace.layout.chrome.v1`; saved session records cannot establish window visibility. No focus-mode restoration history is created.
+- Preview any move, split or arrangement with `--dry-run --json`. It only reads the host layout and runs the shared planner locally; it never sends a change request. The result includes `basedOnRevision`, `changedTabs` (including other tabs whose bounds or positions change), `createdGroupIds` and `proposed`. New group IDs are provisional and will differ on application. The proposed layout is hypothetical: its display flags do not claim the layout is currently on screen. A saved-layout preview does not imply a desktop owner is available to apply it.
+- Apply the same command without `--dry-run`, using `--expected-revision` from the preview's `basedOnRevision`. If it is rejected, inspect and preview again rather than blindly retrying.
+- Inspect the layout before arranging it. `layout self` resolves your own terminal or chat identity; it never assumes the focused tab is yours.
+- `position` counts from zero within a group. Bounds are normalized workspace coordinates, not monitor pixels. Stacked tabs share bounds; `isDisplayed` also requires that workspace to be active.
+- `availability: saved` describes persisted records when no desktop layout owner is available. It is not evidence that a process is running or exited. Mutations require an available desktop layout owner.
+- Use `--expected-revision <revision>` from a prior inspection to reject changes if the user has rearranged the layout since then. Without it, the CLI reads a fresh revision before sending the change.
+- Four grid IDs are ordered top-left, top-right, bottom-left, bottom-right. Other tabs retain their groups; the new grid goes to their right. Use a JSON array for IDs containing commas.
+- Splitting groups moves existing tabs; `terminal split` creates a pane inside a terminal tab. Neither layout movement nor arrangement starts or stops processes.
+- Remote calls require an explicit `--worktree`. Older hosts without `workspace.layout.v1` reject these commands without changing the layout.
+
 ## Full Handoffs
 
 A full handoff transfers ownership to another agent or worktree, then the original agent stops. Treat requests phrased as "hand off", "handoff", "handover", "give this to another agent", "give this to another worktree", "another agent", or "another worktree" as full handoffs unless the user explicitly asks to supervise, monitor, wait for results, track completion, coordinate a DAG, use decision gates, or manage ask/reply.

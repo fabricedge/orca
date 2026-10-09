@@ -13,6 +13,18 @@ export type HandlerGroup = {
 // real exports by handler-group-manifest.test.ts, so drift fails CI, not dispatch.
 export const HANDLER_GROUPS: readonly HandlerGroup[] = [
   {
+    name: 'layout',
+    keys: [
+      'layout chrome',
+      'layout show',
+      'layout self',
+      'layout move',
+      'layout split',
+      'layout arrange'
+    ],
+    load: async () => (await import('./handlers/layout.js')).LAYOUT_HANDLERS
+  },
+  {
     name: 'core',
     keys: ['claude-teams', 'open', 'serve', 'status'],
     load: async () => (await import('./handlers/core.js')).CORE_HANDLERS
