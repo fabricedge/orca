@@ -203,6 +203,12 @@ jobs:
         with:
           bun-version-file: config/.bun-version
 
+      - name: Check Linux service setup script
+        if: needs.code_paths.outputs.static_analysis == 'true'
+        run: |
+          bash -n config/scripts/setup-orca-serve.sh
+          shellcheck config/scripts/setup-orca-serve.sh
+
       # Keep each check in its own log while sharing this runner.
       - name: Lint
         if: '!cancelled()'

@@ -181,6 +181,55 @@ orca-ide serve --pairing-address 100.64.1.20 --mobile-pairing
 
 Keep the phone on the same tailnet, open Orca Mobile, choose **Pair**, and scan the terminal QR code or paste the printed link.
 
+### Start automatically on Linux
+
+On a Linux host with systemd, the standalone setup helper installs a service for your regular user. With user lingering enabled, it starts before login and keeps running after you log out.
+
+From the root of an Orca source checkout matching your installed release, run:
+
+```bash
+./config/scripts/setup-orca-serve.sh
+```
+
+The helper looks for the installed `orca-ide` launcher, then advertises your Tailscale IPv4 address or the source address of your default IPv4 route. It does not install Orca or Tailscale. You can also copy this single script from the checkout and run it independently.
+
+To select a stable address, launcher, port, or existing profile:
+
+```bash
+PAIRING_ADDRESS=100.64.1.20 PORT=6768 ./config/scripts/setup-orca-serve.sh
+ORCA_BIN=/absolute/path/to/orca-ide ./config/scripts/setup-orca-serve.sh
+ORCA_USER_DATA_PATH=/absolute/path/to/profile ./config/scripts/setup-orca-serve.sh
+```
+
+Run it as the user who owns the projects and agent accounts, without `sudo`. Use the same profile that owns your saved pairing data. The service preserves your configured `PATH` and XDG directories; install and authenticate agent CLIs on this host. Choose one host mode: stop the desktop app or foreground server before starting the service for that profile.
+
+If lingering needs administrator authorization, the helper prints the exact `sudo loginctl enable-linger <uid>` command and stops before replacing the unit. Have an administrator run that command, then rerun setup. Over SSH, the account must have a running systemd user manager and an accessible `/run/user/<uid>/bus`; setting `XDG_RUNTIME_DIR` alone does not create either.
+
+Check service state and read its latest startup output:
+
+```bash
+systemctl --user status orca-serve.service
+journalctl --user -u orca-serve.service -b -o cat
+```
+
+An active service means the process has started. Confirm the latest **Orca server ready** message, advertised endpoint, and available mobile pairing link in the log before pairing. The log can also report unavailable pairing or startup errors. Keep pairing links private.
+
+Rerun the helper with your desired overrides to refresh the configuration. Changed settings restart the service and briefly disconnect clients; an unchanged active, enabled service is left running. Supply the same overrides on later runs to retain them. If a refresh fails, the helper attempts to restore the previous unit and service state.
+
+Existing units created manually or by older copies of the script require explicit adoption:
+
+```bash
+./config/scripts/setup-orca-serve.sh install --replace
+```
+
+Review the existing unit first. Adoption keeps a backup beside it. Symlinked units are refused. To remove an installer-owned service:
+
+```bash
+./config/scripts/setup-orca-serve.sh uninstall
+```
+
+Removal stops and disables the server, then removes its unit only after confirming it stopped. It retains projects, credentials, pairing data, terminal daemons, and lingering. Saved phone pairing survives server restarts and reboots when the profile and advertised endpoint remain available. Changing a LAN address or port may require updating the connection or pairing again. Service restarts use Orca's existing terminal-daemon isolation; rebooting the host ends running processes.
+
 ## Desktop app or `orca serve`?
 
 |               | Desktop app on the server           | `orca serve`                                       |
