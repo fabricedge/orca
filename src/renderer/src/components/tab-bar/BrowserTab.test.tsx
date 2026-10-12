@@ -134,6 +134,9 @@ vi.mock('./TabHoverCard', () => ({
 }))
 
 vi.mock('@/components/ui/tooltip', () => ({
+  TooltipProvider: function TooltipProvider(props: { children?: unknown }) {
+    return props.children
+  },
   Tooltip: function Tooltip(props: { children?: unknown }) {
     return { type: 'Tooltip', props }
   },
@@ -258,7 +261,7 @@ describe('BrowserTab favicon', { timeout: 30_000 }, () => {
   })
 
   it('passes the workspace ID to Copy Tab ID instead of the browser content ID', async () => {
-    const { CopyTabIdMenuItem } = await import('./CopyTabIdMenuItem')
+    const { CopyTabMenuItems } = await import('./CopyTabMenuItems')
     const tree = await renderBrowserTab(baseBrowserTab(), 'workspace-browser-1')
     const visit = (node: unknown): ReactElementLike | undefined => {
       if (Array.isArray(node)) {
@@ -267,7 +270,7 @@ describe('BrowserTab favicon', { timeout: 30_000 }, () => {
       if (!isValidElement<{ children?: unknown; unifiedTabId?: string }>(node)) {
         return undefined
       }
-      if (node.type === CopyTabIdMenuItem) {
+      if (node.type === CopyTabMenuItems) {
         return { type: node.type, props: node.props }
       }
       return visit(node.props.children)

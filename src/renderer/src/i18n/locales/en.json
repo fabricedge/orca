@@ -18735,6 +18735,15 @@
           "copied": "Tab ID copied",
           "failed": "Could not copy tab ID",
           "copy": "Copy Tab ID"
+        },
+        "CopyTabDetailsMenuItem": {
+          "details": "Details",
+          "copied": "Detailed tab ID copied",
+          "failed": "Could not copy tab details",
+          "copy": "Copy Tab Details"
+        },
+        "CopyTabMenuItems": {
+          "agentContext": "Share the copied tab ID with an AI agent to identify this tab. Use Details to include its position and workspace layout."
         }
       }
     },
