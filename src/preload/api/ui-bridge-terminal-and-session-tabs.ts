@@ -212,6 +212,15 @@ export const uiTerminalAndSessionTabsApi = {
   respondSessionTabClose: (response) => {
     ipcRenderer.send('ui:sessionTabCloseResponse', response)
   },
+  onWorkspaceLayoutRequest: (callback) => {
+    const listener = (_event: Electron.IpcRendererEvent, request: Parameters<typeof callback>[0]) =>
+      callback(request)
+    ipcRenderer.on('ui:workspaceLayoutRequest', listener)
+    return () => ipcRenderer.removeListener('ui:workspaceLayoutRequest', listener)
+  },
+  respondWorkspaceLayout: (response) => {
+    ipcRenderer.send('ui:workspaceLayoutResponse', response)
+  },
   onMoveSessionTab: (
     callback: (data: { worktreeId: string } & RuntimeMobileSessionTabMove) => void
   ): (() => void) => {
