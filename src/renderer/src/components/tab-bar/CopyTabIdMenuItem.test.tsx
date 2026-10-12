@@ -44,7 +44,9 @@ describe('CopyTabIdMenuItem', () => {
     expect(writeClipboardText).toHaveBeenCalledExactlyOnceWith('orcaTabId: workspace-tab-123')
     expect(toast.success).not.toHaveBeenCalled()
     await act(async () => finishWrite?.())
-    expect(toast.success).toHaveBeenCalledExactlyOnceWith('Tab ID copied')
+    expect(toast.success).toHaveBeenCalledExactlyOnceWith('Tab ID copied', {
+      position: 'bottom-right'
+    })
     expect(toast.error).not.toHaveBeenCalled()
   })
 
