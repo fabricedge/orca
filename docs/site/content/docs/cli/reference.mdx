@@ -378,6 +378,22 @@ orca agent hooks on --json
 orca agent hooks off --json
 ```
 
+## Inspect a copied tab ID
+
+Right-click a terminal, browser, or editor tab and choose **Copy Tab ID**. The clipboard contains `orcaTabId: <id>`. This is the workspace tab ID; it can differ from a terminal or browser content ID.
+
+```sh
+orca layout show --worktree id:WORKSPACE_ID --tab "orcaTabId: TAB_ID" --json
+```
+
+Use the complete clipboard text or just the raw ID. Omit `--tab` to inspect every tab. For a local folder workspace or worktree, omit `--worktree` to resolve the current workspace. Remote calls require an explicit workspace selector.
+
+The response includes the workspace ID, revision, groups, split layout, and matching tabs. Each tab includes its content ID, type, title, execution host, group ID, zero-based position within that group, pin state, and normalized bounds. Bounds range over the workspace, not screen pixels. Other groups remain in the response when filtering by tab ID.
+
+`availability: open` means the owning renderer supplied its loaded state. `availability: saved` means the host read persisted session records; this does not establish that a tab is currently visible or its process is live. `isDisplayed` is true only for an active tab in the active workspace's visible layout.
+
+This command only reads state. It does not select, move, split, or close tabs, and it does not change sidebars. An unsupported execution host returns an explicit compatibility error. If a loaded renderer disappears or times out, its error is surfaced instead of presenting saved records as its live layout.
+
 ## Agent habits
 
 - Prefer `--json` for automation and agent calls.

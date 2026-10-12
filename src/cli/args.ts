@@ -158,7 +158,8 @@ export function supportsBrowserPageFlag(commandPath: string[]): boolean {
       'linear',
       'skills',
       'search',
-      'agent-context'
+      'agent-context',
+      'layout'
     ].includes(commandPath[0])
   ) {
     return false
