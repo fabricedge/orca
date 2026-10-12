@@ -20,7 +20,36 @@ import {
 } from './workspace-layout-round-trip-watch'
 import { registerDetectedWorktreeScanInvalidation } from '../ipc/worktrees/listing/register-detected-worktree-scan-invalidation'
 
+import {
+  describeWorkspaceTabLayout,
+  type WorkspaceTabLayoutDescription
+} from '../../shared/workspace-tab-location'
+
 class OrcaRuntimeService extends OrcaRuntimeWithMigrationCatalog {
+  async workspaceTabLayout(worktreeSelector: string): Promise<WorkspaceTabLayoutDescription> {
+    const workspace = await this.resolveWorktreeSelector(worktreeSelector)
+    if (this.notifier?.workspaceLayout && this.getAvailableAuthoritativeWindow()) {
+      try {
+        return await this.notifier.workspaceLayout({ workspaceId: workspace.id })
+      } catch (error) {
+        if (!(error instanceof Error) || error.message !== 'workspace_layout_not_loaded') {
+          throw error
+        }
+      }
+    }
+    const session = this.getWorkspaceSessionForWorktree(workspace.id)
+    return describeWorkspaceTabLayout(
+      workspace.id,
+      {
+        tabs: session?.unifiedTabs?.[workspace.id] ?? [],
+        groups: session?.tabGroups?.[workspace.id] ?? [],
+        layout: session?.tabGroupLayouts?.[workspace.id] ?? null,
+        activeGroupId: session?.activeGroupIdByWorktree?.[workspace.id] ?? null
+      },
+      'saved'
+    )
+  }
+
   constructor(...args: ConstructorParameters<typeof OrcaRuntimeWithMigrationCatalog>) {
     super(...args)
     // Why: the runtime listing re-runs a scan the worktree-change generation overtook and re-lists

@@ -2,6 +2,7 @@
 // allowlist: no client calls it until the switch, so it is inert.
 
 import {
+  WorkspaceLayoutShow,
   LayoutSubscribeParams,
   LayoutUnsubscribeParams
 } from '../../../../shared/rpc-contract/workspace-layout-params'
@@ -11,6 +12,12 @@ import { defineMethod, defineStreamingMethod } from '../core'
 let layoutSubscriptionSeq = 0
 
 export const WORKSPACE_LAYOUT_METHODS = [
+  defineMethod({
+    name: 'workspace.layout.show',
+    permission: 'workspace',
+    params: WorkspaceLayoutShow,
+    handler: (params, { runtime }) => runtime.workspaceTabLayout(params.worktree)
+  }),
   defineStreamingMethod({
     name: 'layout.subscribe',
     permission: 'workspace',

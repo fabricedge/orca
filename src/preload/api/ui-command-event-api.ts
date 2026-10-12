@@ -1,3 +1,7 @@
+import type {
+  WorkspaceTabLayoutRequest,
+  WorkspaceTabLayoutResponse
+} from '../../shared/workspace-tab-layout-inspection'
 import type { MarkdownDocument } from '../../shared/filesystem-entry-types'
 import type { PersistedUIState } from '../../shared/persisted-ui-state-types'
 import type { TuiAgent } from '../../shared/tui-agent'
@@ -224,6 +228,8 @@ export type UiCommandEventApi = {
   onCloseSessionTab: (callback: (data: { tabId: string; worktreeId: string }) => void) => () => void
   onSessionTabCloseRequest: (callback: (request: SessionTabCloseRequest) => void) => () => void
   respondSessionTabClose: (response: SessionTabCloseResponse) => void
+  onWorkspaceLayoutRequest: (callback: (request: WorkspaceTabLayoutRequest) => void) => () => void
+  respondWorkspaceLayout: (response: WorkspaceTabLayoutResponse) => void
   onMoveSessionTab: (
     callback: (data: { worktreeId: string } & RuntimeMobileSessionTabMove) => void
   ) => () => void
