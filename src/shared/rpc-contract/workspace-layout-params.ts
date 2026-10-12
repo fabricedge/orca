@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { WorktreeTabSelector } from './session-tabs-schemas-params'
 
 export const LayoutSubscribeParams = z
   .object({
@@ -10,3 +11,5 @@ export const LayoutSubscribeParams = z
 export const LayoutUnsubscribeParams = z.object({
   subscriptionId: z.string().min(1, 'Missing subscriptionId')
 })
+
+export const WorkspaceLayoutShow = WorktreeTabSelector

@@ -15,7 +15,10 @@ import { useAppStore } from '../../store'
 import { resolveBrowserSessionTabTarget } from './browser-session-tab-target'
 import { resolveWindowTabIdForHostTab } from './host-session-tab-target'
 
+import { registerWorkspaceLayoutIpcBridge } from './workspace-layout-ipc-bridge'
+
 export function registerSessionTabIpcBridge(unsubs: (() => void)[]): void {
+  registerWorkspaceLayoutIpcBridge(unsubs)
   unsubs.push(
     window.api.ui.onCloseSessionTab(({ tabId, worktreeId }) => {
       if (isLocalSessionTabCloseOwned(worktreeId, tabId)) {

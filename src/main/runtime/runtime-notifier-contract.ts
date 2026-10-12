@@ -1,3 +1,4 @@
+import type { WorkspaceTabLayoutDescription } from '../../shared/workspace-tab-location'
 import type { AgentLaunchPaneVerdictEvent } from '../../shared/agent-launch-pane-verdict'
 import type { SleepingAgentLaunchConfig } from '../../shared/agent-session-resume'
 import type {
@@ -109,6 +110,7 @@ export type RuntimeNotifier = {
   focusTerminal(tabId: string, worktreeId: string, leafId?: string | null): void
   focusEditorTab?(tabId: string, worktreeId: string): void
   closeSessionTab?(tabId: string, worktreeId: string): void | Promise<void>
+  workspaceLayout?(request: { workspaceId: string }): Promise<WorkspaceTabLayoutDescription>
   moveSessionTab?(worktreeId: string, move: RuntimeMobileSessionTabMove): void
   /**
    * Acts only on the host's own window: 'host'/'all' move it, 'caller'/'clients' open without moving

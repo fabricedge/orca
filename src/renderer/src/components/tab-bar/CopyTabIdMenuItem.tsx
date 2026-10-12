@@ -7,7 +7,9 @@ export function CopyTabIdMenuItem({ unifiedTabId }: { unifiedTabId: string }): R
   const copyTabId = async (): Promise<void> => {
     try {
       await window.api.ui.writeClipboardText(`orcaTabId: ${unifiedTabId}`)
-      toast.success(translate('components.tab.bar.CopyTabIdMenuItem.copied', 'Tab ID copied'))
+      toast.success(translate('components.tab.bar.CopyTabIdMenuItem.copied', 'Tab ID copied'), {
+        position: 'bottom-right'
+      })
     } catch {
       toast.error(translate('components.tab.bar.CopyTabIdMenuItem.failed', 'Could not copy tab ID'))
     }
