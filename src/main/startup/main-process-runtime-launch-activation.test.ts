@@ -288,7 +288,7 @@ describe('desktop startup activation', () => {
     expect(state.desktopActivationGate).toBeNull()
   })
 
-  it('loads SSH targets on a windowless serve before paired clients can connect (#25886)', async () => {
+  it('starts Relay and loads SSH targets on a windowless serve before paired clients connect (#25886)', async () => {
     launchOrder.length = 0
     state.isServeMode = true
     vi.mocked(getServeOptions).mockReturnValueOnce({
@@ -314,6 +314,7 @@ describe('desktop startup activation', () => {
 
     expect(windows).toHaveLength(0)
     expect(launchOrder).toEqual(['ssh-registered', 'rpc-start', 'relay-start'])
+    expect(launchOrder.filter((step) => step === 'relay-start')).toHaveLength(1)
     // Signals mark their quit, so the macOS native-quit guard lets them through (#15537).
     expect(registerServeSignalHandlers).toHaveBeenCalledWith(process, quitProcess)
     expect(installServeNativeQuitGuard).toHaveBeenCalledWith(

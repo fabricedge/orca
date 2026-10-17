@@ -165,26 +165,15 @@ orca serve --port 6768 --pairing-address 100.64.1.20
 orca-ide serve --port 6768 --pairing-address 100.64.1.20
 ```
 
-Do not run the desktop app and `orca serve` against the same profile. If you want a visible window on the same computer as a headless host, use two profiles as described below: one profile runs the host and the other runs a paired desktop client.
+Run only `orca serve` on the host. It uses the host's existing Orca profile for workspaces, agents, provider accounts, and the saved Orca Cloud session, then starts Relay from that session. Remote Orca Server clients still connect to the host's advertised network address; Relay does not replace LAN, Tailscale, or SSH tunnel access. Do not also open the Orca desktop app on the host while `orca serve` is running.
 
-### Keep a headless host and open its desktop client on the same computer
-
-This setup keeps one runtime, its workspaces, agents, provider accounts, and Relay session in a background profile, while a separate Orca window connects to it. Sign in to Orca Cloud in the host profile first; `orca serve` starts Relay from that saved session. Start the host before the client so it can claim the default server port.
-
-Choose two separate user-data directories and use them consistently. For example, start the host with:
+For example, on Linux:
 
 ```bash
-ORCA_USER_DATA_PATH="$HOME/.local/share/orca/relay-host" \
-  orca-ide serve --port 6768 --pairing-address 127.0.0.1
+orca-ide serve --port 6768 --pairing-address 100.64.1.20
 ```
 
-Copy the printed pairing URL. In another terminal, launch the visible client with its own profile:
-
-```bash
-ORCA_USER_DATA_PATH="$HOME/.local/share/orca/visible-client" orca-ide open
-```
-
-In that window, open **Settings → Remote Orca Servers → Add Server**, paste the pairing URL, and connect. Select the paired server or one of its projects to work in the host runtime. The host profile owns Relay and agent credentials; the client profile stores its pairing and window state. Keep the host’s profile path in its service configuration so it reconnects to the same data after reboot, and use the client profile path in your dmenu launcher when you run `orca-ide open`. Use a reachable LAN or Tailscale address instead of `127.0.0.1` if another device will also connect.
+Sign in to Orca Cloud in the host's existing profile before starting the service. Copy the pairing URL printed by `orca serve` and add it in **Settings → Remote Orca Servers → Add Server** on another Orca client. Use a reachable LAN or Tailscale address for that client; `127.0.0.1` only works on the host itself. Keep the service running to preserve the same runtime and Relay session.
 
 `orca serve` runs on Orca's own Node server (orcad) by default. If orcad can't serve on this computer, it uses the desktop app's server instead and prints one line saying why. On a packaged macOS app it currently always uses the desktop app's server, so paired clients can still update it. To always use the desktop app's server, set `ORCA_SERVE_RUNTIME=electron`.
 
