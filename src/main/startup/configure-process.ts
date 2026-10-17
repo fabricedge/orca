@@ -221,8 +221,8 @@ export function configureDevUserDataPath(isDev: boolean): void {
     app.setPath('userData', overrideUserDataPath)
     return
   }
-  // Why: without a dev-only path, pnpm dev overwrites the packaged app's runtime pointer under userData and breaks the orca CLI.
-  app.setPath('userData', join(app.getPath('appData'), 'orca-dev'))
+  // Why: development and packaged Orca share the user's repos, worktrees, and profile settings.
+  app.setPath('userData', join(app.getPath('appData'), 'orca'))
 }
 
 function areSameE2EHomePath(left: string, right: string): boolean {

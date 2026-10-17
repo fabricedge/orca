@@ -340,16 +340,15 @@ describe('configureDevUserDataPath', () => {
     expect(app.setPath).toHaveBeenCalledWith('userData', '/tmp/orca-dev-repro')
   })
 
-  it('moves dev runs onto an orca-dev userData path', async () => {
+  it('uses the shared Orca userData path for dev runs', async () => {
     const { app } = await import('electron')
     const { configureDevUserDataPath } = await import('./configure-process')
 
     delete process.env.ORCA_DEV_USER_DATA_PATH
     configureDevUserDataPath(true)
 
-    // Why: production code uses path.join(app.getPath('appData'), 'orca-dev')
-    // which produces platform-specific separators.
-    expect(app.setPath).toHaveBeenCalledWith('userData', join('/tmp/app-data', 'orca-dev'))
+    // Why: path.join produces platform-specific separators for the shared profile.
+    expect(app.setPath).toHaveBeenCalledWith('userData', join('/tmp/app-data', 'orca'))
   })
 
   it('leaves packaged runs on the default userData path', async () => {

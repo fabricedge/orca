@@ -1,3 +1,8 @@
+# Resource limits
+
+- Reserve 2 GiB of `MemAvailable` for the user at all times; never spend that reserve on builds or typechecks. Before starting one, check `/proc/meminfo` and confirm available memory exceeds 2 GiB plus the task's expected peak use. Monitor long-running work and stop only processes started for the current task before `MemAvailable` falls below 2 GiB; report the interruption instead of retrying below the threshold.
+- Do not run memory-heavy checks concurrently. Check for orphaned compiler or app processes before retrying a check.
+
 # Design System
 
 All UI work — layout, color, typography, spacing, component selection, UX behavior — must follow [`docs/STYLEGUIDE.md`](./docs/STYLEGUIDE.md). Most of it is linted: `pnpm run check:code-quality:changed` fails on new restyles of a `components/ui/` primitive, raw palette colors, and computed `className` strings; `pnpm lint` fails on any class Tailwind cannot generate. See the Enforcement section of the style guide before suppressing either. Use the tokens defined in `src/renderer/src/assets/main.css` (the canonical source) and the shadcn primitives in `src/renderer/src/components/ui/`. Don't invent new color values, font sizes, or shadow tiers when a documented one already covers the role. When STYLEGUIDE.md is silent, follow the resolution order in its final section. In `components/native-chat/`, the "Chat type scale" and "Chat text colour, hover and focus" sections are binding, and `pnpm lint` fails on arbitrary font sizes, softened `text-foreground`, and weakened focus rings there.
