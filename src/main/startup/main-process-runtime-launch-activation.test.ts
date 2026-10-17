@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { startDesktopRelayService } from './main-process-relay-startup'
 
 const electronApp = vi.hoisted(() => ({
   isPackaged: false,
@@ -286,6 +287,7 @@ describe('desktop startup activation', () => {
 
   it('loads SSH targets on a windowless serve before paired clients can connect (#25886)', async () => {
     launchOrder.length = 0
+    vi.mocked(startDesktopRelayService).mockClear()
     state.isServeMode = true
     vi.mocked(getServeOptions).mockReturnValueOnce({
       json: false,
@@ -310,6 +312,7 @@ describe('desktop startup activation', () => {
 
     expect(windows).toHaveLength(0)
     expect(launchOrder).toEqual(['ssh-registered', 'rpc-start'])
+    expect(startDesktopRelayService).toHaveBeenCalledOnce()
     // Signals mark their quit, so the macOS native-quit guard lets them through (#15537).
     expect(registerServeSignalHandlers).toHaveBeenCalledWith(process, quitProcess)
     expect(installServeNativeQuitGuard).toHaveBeenCalledWith(
