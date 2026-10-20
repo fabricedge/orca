@@ -38,6 +38,10 @@ const {
 } = require('./scripts/verify-packaged-mobile-web-bundle.cjs')
 const { verifyPackagedPluginResources } = require('./scripts/verify-packaged-plugin-resources.cjs')
 const {
+  assertPackagedServeSelectionEntry,
+  assertPackagedWebClient
+} = require('./scripts/verify-packaged-serve-payload.cjs')
+const {
   assertBundledRipgrepInstalled,
   bundledRipgrepExtraResources,
   bundledRipgrepMacSignIgnore,
@@ -62,6 +66,7 @@ const {
   verifyAppImageNodeRuntimeServesPty
 } = require('./scripts/appimage-node-runtime.cjs')
 const { signWindowsUninstallerViaSignPath } = require('./scripts/windows-uninstaller-signing.cjs')
+const { buildMacShipItScheduling } = require('./scripts/macos-shipit-scheduling.cjs')
 
 // Why: dev-channel builds must carry the *release* identity — same bundle id,
 // Developer ID signature, and notarization ticket — or Squirrel.Mac refuses to
@@ -259,6 +264,8 @@ module.exports = {
     '!out/runtimes{,/**/*}',
     '!out/node-runtime-cache{,/**/*}',
     '!config{,/**/*}',
+    // Cloud services deploy separately; their sources are not desktop runtime resources.
+    '!cloud{,/**/*}',
     // Release archives and other build staging are not runtime resources.
     '!.build{,/**/*}',
     // Worktree-local Vite dependency caches are development inputs.
@@ -399,7 +406,7 @@ module.exports = {
     mobileWebBundleDir = MOBILE_WEB_BUNDLE_DIR,
     ensureWaylandClipboard = ensureBundledWaylandClipboard
   ) => {
-    assertNotDarkBuild([join(__dirname, '..', 'out', 'main')])
+    assertNotDarkBuild([join(__dirname, '..', 'out', 'main'), mobileWebBundleDir])
     assertPackagedNativeVariantsInstalled(context.electronPlatformName, context.arch)
     assertBundledRipgrepInstalled()
     assertProcessHostOutputBuilt()
@@ -432,6 +439,8 @@ module.exports = {
         context.packager.appInfo.productFilename
       )
       const architecture = macSliceArch(context.arch, 'local-build compatibility')
+      const schedulingAddon = buildMacShipItScheduling(resourcesDir, architecture)
+      await signMacStandaloneHelper(schedulingAddon, 'ShipIt scheduling', context.packager)
       const version = context.packager.appInfo.version
       let commit = process.env.ORCA_BUILD_COMMIT || process.env.GITHUB_SHA || 'unknown'
       if (commit === 'unknown') {
@@ -501,6 +510,8 @@ module.exports = {
     // Why: inspect electron-builder's real output so a broken extraResources
     // mapping fails packaging before bundled content reaches users.
     verifyPackagedPluginResources(resourcesDir)
+    assertPackagedWebClient(resourcesDir)
+    assertPackagedServeSelectionEntry(resourcesDir)
     finalizePackagedRipgrep(resourcesDir)
     await finalizePackagedOrcadTemplate(resourcesDir, {
       platform: context.electronPlatformName,
