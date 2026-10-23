@@ -1,3 +1,4 @@
+import { quotePosixShell } from '../../shared/shell-argument-quoting'
 import type { SshConnectionManager } from './connection/ssh-connection-manager'
 import type { SshExecOptions } from './connection/ssh-exec-options'
 import { powerShellCommand } from './ssh-remote-powershell'
@@ -6,7 +7,7 @@ import type { FilesystemPathFlavor } from '../../shared/filesystem-entry-types'
 import { sortDirEntries } from '../../shared/file-name-sort'
 import { buildPosixStdoutFence } from '../../shared/posix-stdout-fence'
 
-export type RemoteDirEntry = {
+type RemoteDirEntry = {
   name: string
   isDirectory: boolean
 }
@@ -266,13 +267,9 @@ function shellEscape(s: string): string {
     return '"$HOME"'
   }
   if (s.startsWith('~/')) {
-    return `"$HOME"/${shellEscapeRaw(s.slice(2))}`
+    return `"$HOME"/${quotePosixShell(s.slice(2))}`
   }
-  return shellEscapeRaw(s)
-}
-
-function shellEscapeRaw(s: string): string {
-  return `'${s.replace(/'/g, "'\\''")}'`
+  return quotePosixShell(s)
 }
 
 function powerShellPathExpression(s: string): string {

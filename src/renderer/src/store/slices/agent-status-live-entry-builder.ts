@@ -2,9 +2,10 @@ import { sameAgentStatusTerminalOwner } from '../../../../shared/agent-status-te
 import type { AppState } from '../types'
 import { resolveAgentStatusLiveEntryMainAgent } from './agent-status-live-entry-main-agent'
 import { resolveAgentStatusLiveEntryStateHistory } from '../../../../shared/agent-status-live-entry-state-history'
-import type {
-  MigrationUnsupportedPtyEntry,
-  AgentStatusEntry
+import {
+  pickHostTurnEnd,
+  type MigrationUnsupportedPtyEntry,
+  type AgentStatusEntry
 } from '../../../../shared/agent-status-types'
 import {
   agentProviderSessionsEqual,
@@ -127,6 +128,13 @@ export function buildAgentStatusLiveEntry(
   const turnStartedAt =
     timing?.turnStartedAt ??
     (existing && existing.state === payload.state ? existing.turnStartedAt : undefined)
+  // Why: the end stamp and its disposition are one host fact, inherited together.
+  const turnEnd =
+    timing?.turnEndedAt !== undefined || timing?.turnEndDisposition !== undefined
+      ? pickHostTurnEnd(timing)
+      : existing && existing.state === payload.state
+        ? pickHostTurnEnd(existing)
+        : {}
   if (
     existing &&
     shouldSuppressInheritedTerminalStatus({
@@ -200,6 +208,8 @@ export function buildAgentStatusLiveEntry(
     matchedRegistryLaunchConfig ??
     matchedSleepingLaunchConfig
   const mainAgent = resolveAgentStatusLiveEntryMainAgent(existing, payload, identity.agentType)
+  const programStatus =
+    payload.programStatus === undefined ? existing?.programStatus : payload.programStatus
   const entry: AgentStatusEntry = {
     state: payload.state,
     workingMode: payload.workingMode,
@@ -214,6 +224,7 @@ export function buildAgentStatusLiveEntry(
     stateStartedAt,
     stateObservedAt,
     ...(turnStartedAt !== undefined ? { turnStartedAt } : {}),
+    ...turnEnd,
     agentType: identity.agentType,
     model:
       payload.model ?? (existing?.agentType === identity.agentType ? existing.model : undefined),
@@ -253,6 +264,7 @@ export function buildAgentStatusLiveEntry(
     ...(payload.restoredUnconfirmed ? { restoredUnconfirmed: true } : {}),
     acceptedStatusSeq: (existing?.acceptedStatusSeq ?? 0) + 1,
     ...(payload.observation ? { observation: payload.observation } : {}),
+    ...(programStatus ? { programStatus } : {}),
     interrupted: payload.interrupted,
     sessionBoundary:
       payload.sessionBoundary ??

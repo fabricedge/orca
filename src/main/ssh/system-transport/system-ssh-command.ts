@@ -7,7 +7,7 @@ import type { SshExecOptions } from '../connection/ssh-exec-options'
 import { buildSshArgs, type SystemSshBuildArgsOptions } from './system-ssh-args'
 import { findSystemSsh } from './system-ssh-binary'
 
-export type SystemSshProcess = {
+type SystemSshProcess = {
   stdin: NodeJS.WritableStream
   stdout: NodeJS.ReadableStream
   stderr: NodeJS.ReadableStream
@@ -63,7 +63,9 @@ export function spawnSystemSshCommand(
   }
 
   const remoteCommand =
-    options?.wrapCommand === false ? command : wrapRemoteCommandForPosixShell(command)
+    options?.wrapCommand === false
+      ? command
+      : wrapRemoteCommandForPosixShell(command, { compress: options?.compressCommand === true })
   const proc = spawn(sshPath, [...buildSshArgs(target, options), remoteCommand], {
     stdio: ['pipe', 'pipe', 'pipe'],
     windowsHide: true

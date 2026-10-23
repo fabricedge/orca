@@ -34,6 +34,9 @@ import {
 import { useTerminalTabActivity } from './use-terminal-tab-activity'
 import { CLOSE_ALL_CONTEXT_MENUS_EVENT } from '@/lib/close-all-context-menus'
 import type { NativeChatTabSession } from './tab-session-history-switch'
+import type { StructuredChatTabNamingFailure } from '@/runtime/structured-conversation-name'
+import { useNativeChatNamingFailure } from './use-native-chat-naming-failure'
+import { NativeChatNamingErrorBlock, NativeChatNamingFailedDialog } from './NativeChatNamingFailure'
 
 /** What the strip draws for a terminal or native chat tab; never a source of agent identity. */
 type SortableTabModel = Pick<
@@ -75,6 +78,8 @@ export type SortableTabProps = {
   canSplitTerminal?: boolean
   /** Set only for a native chat tab. */
   nativeChat?: NativeChatTabSession
+  /** A native chat whose generated name failed, unless the user named the tab. */
+  namingFailure?: StructuredChatTabNamingFailure | null
 }
 
 export default function SortableTab({
@@ -105,8 +110,10 @@ export default function SortableTab({
   isChatView = false,
   onToggleViewMode,
   canSplitTerminal = true,
-  nativeChat
+  nativeChat,
+  namingFailure
 }: SortableTabProps): React.JSX.Element {
+  const naming = useNativeChatNamingFailure(namingFailure)
   // Why: agent-completion unread exists even with terminal-attention off; collapse both sources to one primitive so unrelated tabs don't re-render.
   const hasUnreadActivity = useAppStore((s) =>
     terminalTabHasUnreadActivity({
@@ -115,7 +122,7 @@ export default function SortableTab({
       unreadAgentCompletionPanes: s.unreadAgentCompletionPanes
     })
   )
-  const { activityStatus } = useTerminalTabActivity(tab)
+  const { activityStatus, programProgress } = useTerminalTabActivity(tab)
 
   // Why: shellOverride is stamped at create time, so changing the default shell later won't repaint existing tabs.
   const shellForIcon = tab.shellOverride
@@ -243,6 +250,7 @@ export default function SortableTab({
         shell={shellForIcon}
         showUnreadActivity={showUnreadActivity}
         isActive={isActive}
+        progress={programProgress}
       />
       {isPinned && !isEditing && (
         <Pin className="mr-1 size-3 shrink-0 text-muted-foreground" aria-hidden />
@@ -357,10 +365,13 @@ export default function SortableTab({
       <div
         {...slotProps}
         onContextMenuCapture={(event) => {
-          event.preventDefault()
-          window.dispatchEvent(new Event(CLOSE_ALL_CONTEXT_MENUS_EVENT))
-          setMenuPoint({ x: event.clientX, y: event.clientY })
-          setMenuOpen(true)
+          // The hover card is portalled: React still routes its events through this slot.
+          if (event.target instanceof Node && event.currentTarget.contains(event.target)) {
+            event.preventDefault()
+            window.dispatchEvent(new Event(CLOSE_ALL_CONTEXT_MENUS_EVENT))
+            setMenuPoint({ x: event.clientX, y: event.clientY })
+            setMenuOpen(true)
+          }
         }}
       >
         {isEditing || menuOpen ? (
@@ -382,8 +393,10 @@ export default function SortableTab({
                 shell={shellForIcon}
                 showUnreadActivity={false}
                 isActive
+                progress={programProgress}
               />
             }
+            alert={naming ? <NativeChatNamingErrorBlock naming={naming} /> : undefined}
           >
             {tabRoot}
           </TabHoverCard>
@@ -419,6 +432,7 @@ export default function SortableTab({
         canSplitTerminal={canSplitTerminal}
         nativeChat={nativeChat}
       />
+      {naming ? <NativeChatNamingFailedDialog naming={naming} chatName={displayTitle} /> : null}
     </>
   )
 }
