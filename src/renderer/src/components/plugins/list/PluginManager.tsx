@@ -42,6 +42,7 @@ import {
   type PluginListFilter
 } from './plugin-list-filter'
 import { PluginDetailPage } from '../page/PluginDetailPage'
+import { PluginConflictMap } from './PluginConflictMap'
 import { useOrcaVersion, type PluginPageNavigation } from '../state/use-plugin-page-navigation'
 import type { PluginLogsState } from '../state/use-plugin-logs'
 
@@ -369,6 +370,9 @@ export function PluginManager({
             }
           />
         ) : null}
+        {filter === 'all' || filter === 'installed' ? (
+          <PluginConflictMap plugins={plugins} onOpen={openEntry} />
+        ) : null}
         {nothingMatches ? (
           <PluginNoMatches
             query={query}
@@ -387,7 +391,6 @@ export function PluginManager({
           <PluginAllInstalled onShowInstalled={() => setTab('installed')} />
         ) : filter === 'all' || filter === 'available' ? (
           <div className="@container/plugin-catalog space-y-8">
-            {/* Why the error and loading too: until installed plugins are read, Not installed can't tell what you have. */}
             {filter === 'all' || pluginsError || pluginsLoading ? installedGroup : null}
             {filter === 'available' && (pluginsLoading || pluginsError) ? null : (
               <PluginCatalogGroups
