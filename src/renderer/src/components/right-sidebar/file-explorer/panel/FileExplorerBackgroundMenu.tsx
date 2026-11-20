@@ -1,6 +1,6 @@
 import { preventSecondaryMenuSelection } from '@/components/ui/prevent-secondary-menu-selection'
-import React, { useEffect } from 'react'
-import { FilePlus, FolderPlus } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { ClipboardPaste, FilePlus, FolderPlus } from 'lucide-react'
 import { CLOSE_ALL_CONTEXT_MENUS_EVENT } from '@/lib/overlay-interaction/close-all-context-menus'
 import {
   DropdownMenu,
@@ -9,6 +9,10 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { useTranslate } from '@/i18n/use-translate'
+import {
+  readClipboardPastePreview,
+  type ClipboardPastePreview
+} from '../mutations/file-explorer-clipboard-import'
 
 /** Targets creation and paste at the displayed directory while keeping workspace operations rooted at the worktree. */
 export function FileExplorerBackgroundMenu({
@@ -17,7 +21,8 @@ export function FileExplorerBackgroundMenu({
   point,
   worktreePath,
   displayDepth = 0,
-  onStartNew
+  onStartNew,
+  onPaste
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -25,8 +30,25 @@ export function FileExplorerBackgroundMenu({
   displayDepth?: number
   worktreePath: string
   onStartNew: (type: 'file' | 'folder', dir: string, depth: number) => void
+  onPaste: () => void
 }): React.JSX.Element {
   const t = useTranslate()
+  const [pastePreview, setPastePreview] = useState<ClipboardPastePreview | null>(null)
+  useEffect(() => {
+    if (!open) {
+      setPastePreview(null)
+      return
+    }
+    let current = true
+    void readClipboardPastePreview().then((preview) => {
+      if (current) {
+        setPastePreview(preview)
+      }
+    })
+    return () => {
+      current = false
+    }
+  }, [open])
   useEffect(() => {
     const close = (): void => onOpenChange(false)
     window.addEventListener(CLOSE_ALL_CONTEXT_MENUS_EVENT, close)
@@ -50,6 +72,27 @@ export function FileExplorerBackgroundMenu({
         onPointerUpCapture={preventSecondaryMenuSelection}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
+        {pastePreview ? (
+          <DropdownMenuItem onSelect={onPaste}>
+            <ClipboardPaste />
+            {t('auto.components.right.sidebar.FileExplorerPaste.paste', 'Paste')}
+            <span
+              className="ml-auto max-w-28 truncate text-muted-foreground"
+              title={
+                pastePreview.kind === 'image'
+                  ? t(
+                      'auto.components.right.sidebar.FileExplorerPaste.clipboardImageTitle',
+                      'Clipboard image'
+                    )
+                  : pastePreview.title
+              }
+            >
+              {pastePreview.kind === 'image'
+                ? t('auto.components.right.sidebar.FileExplorerPaste.clipboardImage', 'Image')
+                : pastePreview.label}
+            </span>
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem onSelect={() => onStartNew('file', worktreePath, displayDepth)}>
           <FilePlus />
           {t('auto.components.right.sidebar.FileExplorerBackgroundMenu.21fe46ed36', 'New File')}
