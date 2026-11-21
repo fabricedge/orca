@@ -1,0 +1,23 @@
+{
+  "manifestVersion": 2,
+  "id": "plugin-brief",
+  "name": "Plugin Brief",
+  "version": "0.1.0",
+  "description": "Generate a plugin brief from a recurring task example.",
+  "engines": {
+    "orca": ">=1.4.246"
+  },
+  "execution": "sandboxed-ui",
+  "pluginApi": 1,
+  "contributes": {
+    "panels": [
+      {
+        "id": "plugin-brief",
+        "title": "Plugin Brief",
+        "icon": "blocks",
+        "entry": "src/panel.tsx",
+        "ui": "components"
+      }
+    ]
+  }
+}
